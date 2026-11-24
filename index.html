@@ -1719,8 +1719,7 @@ function renderDrawer(historyLoading) {
   const typeHtml = types.length ? '<div class="chs">' + types.map(x => '<span class="chp">' + esc(x) + '</span>').join('') + '</div>' : '-';
   const detail = '<div class="kv"><dt>ประเภทคำร้อง</dt><dd>' + typeHtml + '</dd></div>'
     + kv('เฟส · ขนาด', (r.phase || '-') + (r.size && r.size !== '-' ? ' · ' + r.size : ''))
-    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole)
-    + kv('แหล่งข้อมูล', r.src);
+    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole);
   $('#drawer').innerHTML =
     '<div class="dhead"><div class="dh"><div style="flex:1;min-width:0"><h3>' + esc(r.name || '(ไม่ระบุชื่อ)') + '</h3>'
     + '<div class="dmeta"><span class="dno">' + esc(r.no || '-') + '</span>' + (r.no ? cp(r.no) : '') + '<span>รับเมื่อ ' + fmt(r.date) + '</span></div></div>'
@@ -1928,7 +1927,6 @@ async function submitForm(e) {
       noteVer(res);
       if (res && res.id && state.detail === editing) state.detail = res.id;   // เลขที่คำร้องเปลี่ยน = รหัสอ้างอิงเปลี่ยนตาม
     } else {
-      d.src = 'บันทึกในเว็บ';
       noteVer(await call('createRequest', [d]));
     }
     closeForm(true);
