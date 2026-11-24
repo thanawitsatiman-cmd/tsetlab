@@ -563,6 +563,17 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 .mtile.all:hover { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
 .mtile[aria-pressed="true"], .mtile[aria-pressed="true"]:hover { background: var(--accent); border-color: var(--accent); transform: none; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 28%, transparent); }
 .mtile .o { font-weight: 500; }
+
+/* กล่องยืนยันการลบ */
+.cfm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 12, 28, .55); }
+.cfm-box { width: min(420px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, .3); padding: 24px; }
+.cfm-ic { width: 44px; height: 44px; border-radius: 50%; background: var(--bad-soft); color: var(--bad); display: grid; place-items: center; margin-bottom: 14px; }
+.cfm-box h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
+.cfm-box p { margin: 0; color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; }
+.cfm-box p b { color: var(--ink); font-weight: 600; }
+.cfm-act { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; font-weight: 600; }
+.btn.danger:hover { background: var(--bad); filter: brightness(1.08); }
 </style>
 </head>
 
@@ -1833,17 +1844,33 @@ async function submitForm(e) {
 }
 
 function confirmDelete(btn) {
-  if (btn.dataset.sure !== '1') {
-    const label = btn.textContent;
-    btn.dataset.sure = '1';
-    btn.textContent = 'ยืนยันลบ';
-    btn.classList.add('sure');
-    setTimeout(() => {
-      if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = label; btn.classList.remove('sure'); }
-    }, 4000);
-    return;
-  }
-  deleteRequest(btn.dataset.del, btn);
+  const id = btn.dataset.del;
+  const r = (state.detailData && state.detailData.id === id ? state.detailData : null) || state.rows.find(x => x.id === id) || {};
+  const who = [r.no, r.name].filter(Boolean).map(esc).join(' · ');
+  const opener = document.activeElement;
+  const box = document.createElement('div');
+  box.className = 'cfm';
+  box.innerHTML = '<div class="cfm-box" role="alertdialog" aria-modal="true" aria-labelledby="cfmT" aria-describedby="cfmD">'
+    + '<div class="cfm-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg></div>'
+    + '<h3 id="cfmT">ยืนยันการลบคำร้อง</h3>'
+    + '<p id="cfmD">' + (who ? 'ต้องการลบคำร้อง <b>' + who + '</b> ใช่หรือไม่<br>' : 'ต้องการลบคำร้องนี้ใช่หรือไม่<br>') + 'เมื่อลบแล้วจะไม่สามารถกู้คืนได้</p>'
+    + '<div class="cfm-act"><button type="button" class="btn" data-c="no">ยกเลิก</button><button type="button" class="btn danger" data-c="yes">ลบคำร้อง</button></div></div>';
+  document.body.appendChild(box);
+  const close = () => { box.remove(); document.removeEventListener('keydown', onKey, true); if (opener && opener.isConnected) opener.focus(); };
+  const onKey = e => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); close(); }
+    else if (e.key === 'Tab') {   // ให้โฟกัสวนอยู่ในกล่อง
+      const bs = [...box.querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+      e.preventDefault();
+      bs[(i + (e.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
+    }
+  };
+  document.addEventListener('keydown', onKey, true);
+  box.addEventListener('click', e => {
+    if (e.target === box || e.target.closest('[data-c="no"]')) { close(); return; }
+    if (e.target.closest('[data-c="yes"]')) { box.remove(); document.removeEventListener('keydown', onKey, true); deleteRequest(id, btn); }
+  });
+  box.querySelector('[data-c="no"]').focus();
 }
 
 /** ลบออกจากหน้าจอทันที ถ้าบันทึกไม่สำเร็จจะใส่กลับ */
