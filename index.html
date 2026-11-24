@@ -639,7 +639,7 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
   .tablewrap td:nth-child(2)::before { text-align: right; }
   /* ช่องยาวเต็มแถว */
   .tablewrap td:nth-child(4), .tablewrap td:nth-child(5),
-  .tablewrap td:nth-child(8), .tablewrap td:nth-child(9) { grid-column: 1 / -1; }
+  .tablewrap td:nth-child(7), .tablewrap td:nth-child(8) { grid-column: 1 / -1; }
   /* สถานะ / สาเหตุ ปุ่มเต็มความกว้าง */
   .tablewrap td .st, .tablewrap td .st.rs, .tablewrap td .st.rs.msb:not(.big), .tablewrap.fit .st, .tablewrap.fit .st.rs.msb:not(.big) {
     width: 100%; max-width: none !important; min-width: 0 !important; min-height: 44px; font-size: 16px; padding: 8px 12px; border-radius: 10px;
@@ -1315,7 +1315,7 @@ function renderBookFilters() {
   put(br, state.br, msLabel(state.br, 'ทุกสาเหตุ', 'สาเหตุ', x => x === '__none' ? 'ยังไม่ระบุสาเหตุ' : x));
 }
 
-const THEAD = '<thead><tr><th>วันที่</th><th>เลขคำร้อง</th><th>ผู้ขอ</th><th>ที่อยู่ลูกค้า</th><th>ประเภทคำร้อง</th><th>เฟส · ขนาด</th><th>สายจดหน่วย</th><th>สถานะ</th><th>สาเหตุ</th></tr></thead>';
+const THEAD = '<thead><tr><th>วันที่</th><th>เลขคำร้อง</th><th>ผู้ขอ</th><th>ที่อยู่ลูกค้า</th><th>ประเภทคำร้อง</th><th>เฟส · ขนาด</th><th>สถานะ</th><th>สาเหตุ</th></tr></thead>';
 
 function rowHtml(r) {
   const size = r.size && r.size !== '-' ? ' · ' + esc(r.size) : '';
@@ -1326,7 +1326,6 @@ function rowHtml(r) {
     + '<td class="addr" data-label="ที่อยู่">' + esc(r.address || '-') + '</td>'
     + '<td data-label="ประเภทคำร้อง">' + typeTags(r.type) + '</td>'
     + '<td data-label="เฟส · ขนาด">' + esc(r.phase && r.phase !== '-' ? r.phase : '-') + size + '</td>'
-    + '<td data-label="สายจดหน่วย">' + esc(r.route) + '</td>'
     + '<td data-label="สถานะ">' + statusCell(r) + '</td>'
     + '<td class="why" data-label="สาเหตุ">' + reasonCell(r) + '</td></tr>';
 }
@@ -1526,7 +1525,7 @@ function buildFrame() {
     $('#view').innerHTML =
       '<div class="head"><div><h2>คำร้องทั้งหมด</h2><div class="sub" id="allSub"></div></div></div>'
       + '<div class="ctl mb">'
-      + '<input type="search" id="fq" placeholder="ค้นหาเลขคำร้อง ชื่อ ที่อยู่ เบอร์โทร สายจดหน่วย" value="' + esc(state.q) + '" style="min-width:360px">'
+      + '<input type="search" id="fq" placeholder="ค้นหาเลขคำร้อง ชื่อ ที่อยู่ เบอร์โทร" value="' + esc(state.q) + '" style="min-width:360px">'
       + '<select id="fm"></select><select id="ft"></select>'
       + '<select id="fs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
       + '</div>'
@@ -1543,7 +1542,7 @@ function buildFrame() {
       + '<div class="bk-years" id="bkYears" role="group" aria-label="เลือกปี พ.ศ."></div>'
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
-      + '<input type="search" id="bq" placeholder="ค้นหาเลขคำร้อง ชื่อ ที่อยู่ เบอร์โทร สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:360px">'
+      + '<input type="search" id="bq" placeholder="ค้นหาเลขคำร้อง ชื่อ ที่อยู่ เบอร์โทร" value="' + esc(state.bq) + '" style="min-width:360px">'
       + '<label class="sub" id="bdLbl" for="bd">วันที่</label><select id="bd" aria-label="เลือกวันที่ของเดือนที่เลือก"></select>'
       + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
       + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
