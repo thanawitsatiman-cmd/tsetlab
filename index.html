@@ -1544,7 +1544,7 @@ function buildFrame() {
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
       + '<input type="search" id="bq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
-      + '<label class="sub" for="bd">วันที่</label><select id="bd" aria-label="เลือกวันที่ของเดือนที่เลือก"></select>'
+      + '<label class="sub" id="bdLbl" for="bd">วันที่</label><select id="bd" aria-label="เลือกวันที่ของเดือนที่เลือก"></select>'
       + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
       + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
       + '<select id="bs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
@@ -1622,6 +1622,9 @@ function renderBookTop() {
 function fillBookDays() {
   const sel = $('#bd');
   if (!sel) return;
+  const lbl = $('#bdLbl'), allYears = state.by === 'all';
+  sel.hidden = allYears;            // หน้า "ทุกปี" ไม่มีเดือนให้เลือก จึงซ่อนช่องวันที่
+  if (lbl) lbl.hidden = allYears;
   const m = state.bm;
   if (!/^\d{4}-\d{2}$/.test(m)) {   // ทั้งปี / ทุกปี: ยังไม่เลือกเดือน เลือกวันไม่ได้
     state.bd = '';
