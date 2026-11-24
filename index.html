@@ -1463,8 +1463,7 @@ function buildFrame() {
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
       + '<input type="search" id="bq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
-      + '<label class="sub" for="bd">วันที่</label><input type="date" id="bd" value="' + esc(state.bd) + '" aria-label="ค้นหาตามวันที่">'
-      + '<button class="btn" type="button" id="bdClear" data-bdclear="1"' + (state.bd ? '' : ' hidden') + '>ล้างวันที่</button>'
+      + '<label class="sub" for="bd">วันที่</label><select id="bd" aria-label="เลือกวันที่ของเดือนที่เลือก"></select>'
       + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
       + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
       + '<select id="bs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
@@ -1538,10 +1537,29 @@ function renderBookTop() {
     : 'ยังไม่มีข้อมูลคำร้อง';
 }
 
+/** รายการเลือกวันที่ของเดือนที่เลือกอยู่ (1 - จำนวนวันของเดือนนั้น) ใช้ได้เมื่อเลือกเดือนแล้วเท่านั้น */
+function fillBookDays() {
+  const sel = $('#bd');
+  if (!sel) return;
+  const m = state.bm;
+  if (!/^\d{4}-\d{2}$/.test(m)) {   // ทั้งปี / ทุกปี: ยังไม่เลือกเดือน เลือกวันไม่ได้
+    state.bd = '';
+    sel.innerHTML = '<option value="">เลือกเดือนก่อน</option>';
+    sel.disabled = true;
+    return;
+  }
+  if (state.bd && state.bd.slice(0, 7) !== m) state.bd = '';
+  const n = new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate();
+  let o = '<option value="">ทุกวัน</option>';
+  for (let i = 1; i <= n; i++) o += '<option value="' + pad(i) + '">' + i + '</option>';
+  sel.innerHTML = o;
+  sel.disabled = false;
+  sel.value = state.bd ? state.bd.slice(8, 10) : '';
+}
+
 function renderBook() {
   if (state.frame !== 'book' || !$('#tbl')) return;
-  const bdc = $('#bdClear'); if (bdc) bdc.hidden = !state.bd;
-  const bdi = $('#bd'); if (bdi && bdi.value !== state.bd) bdi.value = state.bd;
+  fillBookDays();
   renderBookTop();
   renderBookFilters();
   $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่พบคำร้องในช่วงที่เลือก', 'fit');
@@ -1954,7 +1972,6 @@ document.addEventListener('click', e => {
     if (!el.disabled && to >= 0 && to < state.pages && to !== state.page) { state.page = to; loadView(); }
     return;
   }
-  if (t.closest('[data-bdclear]')) { state.bd = ''; state.page = 0; loadView(); return; }
   if ((el = t.closest('[data-act]'))) {
     const a = el.dataset.act;
     if (a === 'prev') shiftDay(-1); else if (a === 'next') shiftDay(1); else setDay(TODAY);
@@ -1986,9 +2003,9 @@ document.addEventListener('change', e => {
     case 'fs': state.fs = t.value; state.page = 0; loadView(); break;
     case 'bs': state.bs = t.value; state.page = 0; loadView(); break;
     case 'bd':
-      state.bd = t.value; state.page = 0;
-      if (state.bd && state.by !== 'all') { state.by = state.bd.slice(0, 4); state.bm = state.bd.slice(0, 7); }   // เลือกวัน → พาไปปี/เดือนของวันนั้นให้อัตโนมัติ
-      loadView(); break;
+      if (!/^\d{4}-\d{2}$/.test(state.bm)) break;
+      state.bd = t.value ? state.bm + '-' + t.value : '';   // วันที่ของเดือนที่เลือกอยู่
+      state.page = 0; loadView(); break;
     case 'pickDay': if (t.value) setDay(t.value); break;
   }
 });
