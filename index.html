@@ -141,13 +141,17 @@ select, input[type=search], input[type=date] {
 }
 .side .brand { padding: 0 6px; }
 nav { display: flex; flex-direction: column; gap: 2px; }
-nav a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 500; }
+nav a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 600; }
 nav a svg { flex: none; }
 nav a:hover { background: var(--surface2); color: var(--ink); }
 nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
 .side-foot .who { margin: 0; padding: 8px 6px; background: none; }
 .side-foot .who img { width: 34px; height: 34px; }
+.side-foot .who > div { flex: 1; gap: 8px; }
+.who .whoRow { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.who .rolechip { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.who .btn { padding: 5px 10px; font-size: 12.5px; }
 
 .bar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
@@ -489,11 +493,11 @@ td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: norma
     </div>
     <nav aria-label="เมนูหลัก">
       <a href="#dashboard" data-v="dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>ภาพรวม</span></a>
-      <a href="#daily" data-v="daily"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>รายวัน</span></a>
-      <a href="#book" data-v="book"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>สมุดคุมคำร้องใช้ไฟ</span></a>
+      <a href="#daily" data-v="daily"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>คำร้องวันนี้</span></a>
+      <a href="#book" data-v="book"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>สมุดคุมคำร้อง</span></a>
     </nav>
     <div class="side-foot">
-      <div class="who" id="sWho" hidden><img id="sAv" alt="" width="34" height="34"><div><b id="sName"></b><span id="sRole"></span></div></div>
+      <div class="who" id="sWho" hidden><img id="sAv" alt="" width="34" height="34" hidden><div><b id="sName"></b><div class="whoRow"><span id="sRole" class="rolechip"></span><button type="button" class="btn" id="btnLogout">ออกจากระบบ</button></div></div></div>
     </div>
   </aside>
 
@@ -1878,7 +1882,7 @@ async function checkAccess() {
     state.canWrite = !!me.canWrite;
     state.canDelete = !!me.canDelete;
     ['s'].forEach(k => {
-      $('#' + k + 'Name').textContent = me.name || me.email;
+      $('#' + k + 'Name').textContent = me.email || me.name;
       $('#' + k + 'Role').textContent = ROLE_TH[me.role] || me.role;
       $('#' + k + 'Av').hidden = true;
       $('#' + k + 'Who').hidden = false;
@@ -1893,6 +1897,11 @@ async function checkAccess() {
   }
 }
 $('#btnRetry').addEventListener('click', checkAccess);
+$('#btnLogout').addEventListener('click', () => {
+  try { sessionStorage.removeItem('idt'); } catch (e) { /* ไม่เป็นไร */ }
+  try { window.google && google.accounts.id.disableAutoSelect(); } catch (e) { /* ไม่เป็นไร */ }
+  location.reload();
+});
 
 showGate();
 initGoogle();
