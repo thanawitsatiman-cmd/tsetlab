@@ -887,7 +887,8 @@ const splitMulti = s => {
   commaOpts().forEach(o => { if (t.indexOf(o) >= 0) { t = t.split(o).join('\u0001' + keep.length + '\u0001'); keep.push(o); } });
   return t.split(',').map(x => x.trim().replace(/\u0001(\d+)\u0001/g, (m, i) => keep[+i])).filter(Boolean);
 };
-const uniq = a => [...new Set(a)];
+/* ตัดค่าซ้ำ (ไม่สนช่องว่างหัวท้าย/ช่องว่างซ้อน) */
+const uniq = a => { const seen = new Set(); return a.map(x => String(x).replace(/\s+/g, ' ').trim()).filter(x => x && !seen.has(x) && seen.add(x)); };
 /* รายการตัวเลือก: ใช้ตาม dropdown ในชีต ถ้าอ่านไม่ได้ใช้รายการตั้งต้นในโค้ด */
 const typeList = () => uniq(state.typeOpts && state.typeOpts.length ? state.typeOpts : TYPES);
 const reasonList = () => uniq(state.reasonOpts && state.reasonOpts.length ? state.reasonOpts : REASONS);
@@ -987,7 +988,7 @@ function updatePopMeta() {
   const empty = pop.el.querySelector('.mpe');
   if (empty) empty.hidden = shown > 0;
   const n = pop.el.querySelector('.mpn');
-  if (n) n.textContent = pop.only && !q ? 'แสดงเฉพาะที่เลือก' : 'ทั้งหมด ' + pop.opts.length + ' รายการ';
+  if (n) n.textContent = pop.only && !q ? 'แสดงเฉพาะที่เลือก' : 'ทั้งหมด ' + pop.opts.filter(o => o[0] !== '__none').length + ' รายการ';
   const tg = pop.el.querySelector('.mpt');
   if (tg) { tg.hidden = pop.keep.size === 0; tg.textContent = pop.only ? '+ เพิ่ม / เปลี่ยนรายการ' : 'เฉพาะที่เลือก'; }
   placePop();
