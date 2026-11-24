@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>ระบบติดตามคำร้อง</title>
+<script src="https://accounts.google.com/gsi/client" async defer onload="window.initGoogle && window.initGoogle()"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+
+<style>
+/* =====================================================================
+   1. ธีมและตัวแปรสี
+   ===================================================================== */
+:root {
+  color-scheme: light;
+  --bg: #f5f3f7; --surface: #ffffff; --surface2: #efecf3; --line: #ded9e6; --ink: #211a2a; --muted: #6a6277;
+  --accent: #6a2c91; --accent-ink: #ffffff; --accent-soft: #ece2f4;
+  --c1: #6a2c91; --c2: #0f8b8d; --c3: #d98a1c; --c4: #2f6fd0; --c5: #c2487a; --c6: #8a8496;
+  --good: #1f8a4c; --good-soft: #dff3e6; --warn: #a96a00; --warn-soft: #fbefd2; --bad: #b3261e; --bad-soft: #fbe0de;
+  --font: 'IBM Plex Sans Thai', 'Noto Sans Thai', 'Leelawadee UI', Tahoma, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #17121d; --surface: #211a2a; --surface2: #2b2336; --line: #3a3047; --ink: #f0ecf5; --muted: #a99fb8;
+    --accent: #b98be0; --accent-ink: #1b1224; --accent-soft: #3a2a4d;
+    --c1: #b98be0; --c2: #4fc3c4; --c3: #f0b04d; --c4: #7aa8f0; --c5: #ec7fae; --c6: #9a94a8;
+    --good: #5fd08c; --good-soft: #1d3a29; --warn: #f0b04d; --warn-soft: #3d2f12; --bad: #ff8a80; --bad-soft: #3d1c1a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #17121d; --surface: #211a2a; --surface2: #2b2336; --line: #3a3047; --ink: #f0ecf5; --muted: #a99fb8;
+  --accent: #b98be0; --accent-ink: #1b1224; --accent-soft: #3a2a4d;
+  --c1: #b98be0; --c2: #4fc3c4; --c3: #f0b04d; --c4: #7aa8f0; --c5: #ec7fae; --c6: #9a94a8;
+  --good: #5fd08c; --good-soft: #1d3a29; --warn: #f0b04d; --warn-soft: #3d2f12; --bad: #ff8a80; --bad-soft: #3d1c1a;
+}
+
+/* =====================================================================
+   2. พื้นฐาน
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+[hidden] { display: none !important; }
+body {
+  margin: 0; padding: 0;
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font); font-size: 14px; line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 30; background: var(--surface);
+}
+img { max-width: 100%; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sp { flex: 1; }
+
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 7px 12px; border-radius: 7px; cursor: pointer; font-weight: 500; }
+.btn:hover { background: var(--surface2); }
+.btn.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.pri:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.wide { width: 100%; padding: 11px 14px; font-size: 15px; }
+
+.lnk { border: 0; background: none; color: var(--accent); cursor: pointer; padding: 2px 8px; font-weight: 500; border-radius: 5px; }
+.lnk:hover { background: var(--accent-soft); }
+.lnk.bad { color: var(--bad); }
+.lnk.sure { background: var(--bad); color: var(--accent-ink); }
+
+select, input[type=search], input[type=date] {
+  border: 1px solid var(--line); background: var(--surface); padding: 7px 10px; border-radius: 7px; min-width: 0;
+}
+
+/* แถบโหลดบาง ๆ ที่ขอบบน (แทนหน้า "กำลังโหลด" ทับทั้งหน้า) */
+.loadbar {
+  position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); height: 3px; z-index: 60;
+  overflow: hidden; opacity: 0; transition: opacity .15s; pointer-events: none;
+}
+.loadbar.on { opacity: 1; }
+.loadbar i { display: block; height: 100%; width: 35%; background: var(--accent); animation: loadslide 1.1s ease-in-out infinite; }
+@keyframes loadslide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 50; background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-weight: 500; max-width: 90vw;
+}
+
+/* =====================================================================
+   3. หน้าเข้าสู่ระบบ
+   ===================================================================== */
+.mark { width: 38px; height: 38px; border-radius: 10px; background: none; display: block; flex: none; overflow: hidden; }
+.mark img { width: 100%; height: 100%; display: block; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand h1 { font-size: 16px; font-weight: 700; margin: 0; line-height: 1.2; }
+.brand p { margin: 0; font-size: 12px; color: var(--muted); }
+
+.login {
+  min-height: 100vh; display: grid; place-items: center;
+  padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.lcard {
+  width: 100%; max-width: 380px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+  padding: 32px 28px 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px;
+}
+.lcard .mark { width: 64px; height: 64px; border-radius: 16px; margin-bottom: 8px; }
+.lcard h2 { margin: 0; font-size: 21px; line-height: 1.3; }
+.lsub { margin: 0; color: var(--muted); }
+.lform { width: 100%; display: flex; flex-direction: column; gap: 6px; text-align: left; margin-top: 14px; }
+.lform label { font-size: 12.5px; font-weight: 600; }
+.lform input { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 16px; }
+.lerr { min-height: 18px; color: var(--bad); font-size: 12.5px; }
+.lnote { margin: 14px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+.who { display: flex; align-items: center; gap: 12px; width: 100%; margin: 22px 0 0; padding: 12px; background: var(--surface2); border-radius: 10px; text-align: left; min-width: 0; }
+.who img { width: 44px; height: 44px; border-radius: 50%; flex: none; object-fit: cover; }
+.who div { display: flex; flex-direction: column; min-width: 0; }
+.who b { overflow-wrap: anywhere; font-weight: 600; }
+.who span { font-size: 12.5px; color: var(--muted); }
+
+/* =====================================================================
+   4. โครงหน้า: เมนูด้านข้าง + แถบบน + เนื้อหา
+   ===================================================================== */
+.shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100%; }
+.content { min-width: 0; }
+
+.side {
+  position: sticky; top: 0; align-self: start; height: 100vh; overflow: auto;
+  background: var(--surface); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 22px;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 14px 18px max(14px, env(safe-area-inset-left, 0px));
+}
+.side .brand { padding: 0 6px; }
+nav { display: flex; flex-direction: column; gap: 2px; }
+nav a { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 500; }
+nav a svg { flex: none; }
+nav a:hover { background: var(--surface2); color: var(--ink); }
+nav a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.side-foot .who { margin: 0; padding: 8px 6px; background: none; }
+.side-foot .who img { width: 34px; height: 34px; }
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar-in { max-width: 1240px; margin: 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 10px; }
+.yearsel { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.yearsel select { color: var(--ink); font-weight: 600; }
+
+main {
+  max-width: 1240px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* =====================================================================
+   5. ส่วนประกอบในหน้า
+   ===================================================================== */
+.notice { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 9px 14px; margin-bottom: 16px; font-weight: 500; }
+.notice .btn { margin-left: auto; }
+
+.head { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.head h2 { margin: 0; font-size: 20px; line-height: 1.25; text-wrap: balance; }
+.head .sub { color: var(--muted); font-size: 13px; }
+.ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ctl.mb { margin-bottom: 12px; }
+.sub { color: var(--muted); font-size: 13px; }
+
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+.kpi .l { color: var(--muted); font-size: 12.5px; }
+.kpi .v { font-size: 30px; font-weight: 700; line-height: 1.15; margin-top: 2px; }
+.kpi .d { font-size: 12.5px; color: var(--muted); }
+.kpi.open .v { color: var(--warn); }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 12px; margin-bottom: 12px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+.panel.mb { margin-bottom: 12px; }
+.panel h3 { margin: 0 0 2px; font-size: 14.5px; }
+.panel .hint { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+.scroll { overflow-x: auto; }
+.empty { padding: 36px 16px; text-align: center; color: var(--muted); }
+
+/* กราฟแท่ง */
+.chart { min-width: 640px; display: block; width: 100%; height: auto; }
+.chart text { font-family: var(--font); fill: var(--muted); font-size: 11px; }
+.chart .gl { stroke: var(--line); stroke-width: 1; }
+.chart .b { fill: var(--c1); }
+.chart .b.td { fill: var(--c3); }
+.chart .cn { fill: var(--ink); font-size: 10px; }
+.chart .hit { fill: transparent; }
+.chart g.colx { cursor: pointer; }
+.chart g.colx:hover .hit { fill: var(--accent-soft); }
+
+/* รายการแท่งแนวนอน */
+.bl { display: grid; grid-template-columns: 104px minmax(0, 1fr) 64px; gap: 10px; align-items: center; padding: 5px 0; }
+.bl-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bl-t { height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+.bl-t i { display: block; height: 100%; border-radius: 5px; }
+.bl-v { text-align: right; color: var(--muted); font-size: 13px; }
+.bl-v b { color: var(--ink); font-weight: 600; }
+.sec { margin: 14px 0 6px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 7px; }
+
+/* ตาราง */
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--surface2); position: sticky; top: 0; }
+td.n, th.n { text-align: right; }
+td.addr { white-space: normal; min-width: 160px; max-width: 220px; }
+td.act { white-space: nowrap; text-align: right; }
+tbody tr:hover { background: var(--surface2); }
+[data-row] { cursor: pointer; }
+.tablewrap {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow-x: auto; overflow-y: visible;
+  scrollbar-width: thin; scrollbar-color: var(--muted) var(--surface2);   /* ไม่มีแถบเลื่อนในตาราง ใช้การเลื่อนของหน้าเว็บ เหมือนหน้ารายวัน */
+}
+/* สมุดคุมคำร้อง: ตารางสูงพอดีจอ เลื่อนขึ้นลงในตาราง ส่วนแนวนอนบีบคอลัมน์ให้พอดี ไม่ต้องเลื่อนซ้ายขวา */
+.tablewrap.fit { overflow: auto; max-height: calc(100vh - 230px); min-height: 280px; overscroll-behavior: contain; }
+.tablewrap.fit th, .tablewrap.fit td { padding: 8px 8px; }
+.tablewrap.fit td.addr { min-width: 130px; max-width: 190px; }
+.tablewrap.fit td.why { min-width: 150px; max-width: 215px; }
+.tablewrap.fit .st.rs.msb:not(.big) { min-width: 150px; max-width: 210px; }
+.tablewrap.fit .st { max-width: 140px; }
+.bk-hint { text-align: right; font-size: 12.5px; color: var(--muted); margin: 0 2px 6px; }
+.tablewrap::-webkit-scrollbar { height: 12px; width: 12px; }
+.tablewrap::-webkit-scrollbar-track { background: var(--surface2); }
+.tablewrap::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 6px; border: 2px solid var(--surface2); }
+/* สมุดคุมคำร้อง: เลือกปี / เดือน */
+.bk-years { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ychip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 18px; cursor: pointer; font-weight: 600; }
+.ychip:hover { border-color: var(--accent); }
+.ychip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.bk-years .bk-legend { margin-left: auto; align-self: center; color: var(--muted); font-size: 12.5px; }
+.bk-months { display: grid; grid-template-columns: minmax(88px, 1.2fr) repeat(12, minmax(0, 1fr)); gap: 6px; margin-bottom: 18px; }
+.mtile { text-align: center; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 4px 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; }
+.mtile:hover { border-color: var(--accent); }
+.mtile .m { font-size: 13px; color: var(--ink); font-weight: 700; }
+.mtile .c { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.mtile .o { font-size: 11.5px; line-height: 1.3; min-height: 1.3em; color: var(--warn); font-weight: 600; }
+.mtile .o.ok { color: var(--good); }
+.mtile.zero { background: var(--surface2); }
+.mtile.zero .m, .mtile.zero .c { color: var(--muted); opacity: .6; font-weight: 600; }
+.mtile.all { background: var(--surface2); margin-right: 6px; }
+.mtile[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); opacity: 1; }
+.mtile[aria-pressed="true"] .m, .mtile[aria-pressed="true"] .c, .mtile[aria-pressed="true"] .o { color: var(--accent-ink); opacity: 1; }
+@media (max-width: 820px) {
+  .bk-months { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .mtile.all { grid-column: 1 / -1; margin-right: 0; flex-direction: row; justify-content: center; gap: 10px; }
+  .bk-years .bk-legend { display: none; }
+}
+.pager { display: flex; align-items: center; gap: 10px; justify-content: flex-end; padding-top: 10px; color: var(--muted); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.chips:empty { display: none; }
+.chip { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; }
+.chip b { font-weight: 700; margin-left: 6px; }
+
+/* สถานะ */
+.pill { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 500; }
+.st { border: 0; border-radius: 999px; padding: 2px 6px; font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; max-width: 150px; }
+.st.big { font-size: 14px; padding: 6px 12px; max-width: 100%; }
+.st option { background: var(--surface); color: var(--ink); }
+.pill.done, .st.done { background: var(--good-soft); color: var(--good); }
+.pill.wait, .st.wait { background: var(--warn-soft); color: var(--warn); }
+.pill.prog, .st.prog { background: var(--accent-soft); color: var(--accent); }
+.pill.fail, .st.fail { background: var(--bad-soft); color: var(--bad); }
+.st.rs { background: var(--surface2); color: var(--ink); max-width: 300px; border-radius: 7px; padding: 4px 8px; border: 1px solid var(--line); }
+.st.rs.big { max-width: 100%; }
+td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: normal; line-height: 1.4; word-break: break-word; }
+.tg { display: block; white-space: nowrap; }
+
+/* สีระดับความเสี่ยง แดง → เขียว */
+:root { --lv0: #9a93a6; --lv1: #d93025; --lv2: #f07a1a; --lv3: #e6a700; --lv4: #78b43e; --lv5: #1e9e4f; }
+.rls { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.rl { display: flex; align-items: flex-start; gap: 8px; line-height: 1.35; font-size: 13px; color: var(--ink); }
+.rl span { min-width: 0; overflow-wrap: anywhere; }
+/* สาเหตุที่แสดงเป็นบรรทัด (ลิ้นชัก/ผู้ดูอย่างเดียว): ทั้งป้ายเป็นสีตามระดับ */
+.rls .rl { display: block; padding: 4px 10px; border-radius: 7px; background: color-mix(in srgb, var(--lv, var(--lv0)) 11%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lv, var(--lv0)) 45%, var(--line)); }
+.st.rs.msb:not(.big) { background: color-mix(in srgb, var(--lv, var(--lv0)) 11%, var(--surface)); border-color: color-mix(in srgb, var(--lv, var(--lv0)) 45%, var(--line)); }
+.msb .rl.one { align-items: center; white-space: nowrap; gap: 7px; }
+.msb .rl.one .t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.msb .mo { flex: none; font-size: 11.5px; font-weight: 600; line-height: 1; padding: 3px 6px; border-radius: 999px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+
+/* ตัวเลือกหลายรายการ (ปุ่มเปิด + กล่องติ๊ก) */
+.msb { display: inline-flex; align-items: center; gap: 6px; text-align: left; white-space: normal; line-height: 1.35; }
+.st.rs.msb:not(.big) { min-width: 170px; max-width: 250px; }
+.msb .mst { min-width: 0; overflow-wrap: anywhere; }
+.msb:not(.big) .mst { overflow: hidden; }
+.msb .ph { color: var(--muted); }
+.msb .car, .msf .car { flex: none; font-size: 11px; opacity: .7; line-height: 1.8; }
+.msb.big { align-items: flex-start; }
+.msf { display: inline-flex; align-items: center; gap: 8px; max-width: 260px; }
+.msf .mst { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* หน้าตาเหมือนกล่อง "ทุกสถานะ" (select) */
+.btn.msf { background: var(--surface); border: 1px solid var(--line); padding: 7px 10px; border-radius: 7px; font-weight: 400; color: var(--ink); }
+.btn.msf:hover { background: var(--surface); }
+.mpop {
+  position: fixed; z-index: 70; width: min(380px, calc(100vw - 16px));
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 12px 36px rgba(20, 12, 28, .32); display: flex; flex-direction: column; max-height: min(72vh, 540px); overflow: hidden;
+}
+.mph { display: flex; flex-direction: column; gap: 8px; padding: 10px 10px 8px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.fg input.ckq, input.mpq, input.ckq {
+  width: 100%; box-sizing: border-box; padding: 8px 10px 8px 32px; border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 14px;
+  background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 10px center; color: var(--ink);
+}
+.fg input.ckq:focus, input.mpq:focus, input.ckq:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.mpi { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.mpi b { color: var(--accent); font-weight: 600; }
+.mpt { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.mpt:hover { background: var(--surface2); }
+.mpt[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.mpl { overflow: auto; padding: 6px; overscroll-behavior: contain; flex: 1 1 auto; min-height: 80px; }
+.mpo { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; line-height: 1.35; border: 1px solid transparent; }
+.mpo + .mpo { margin-top: 2px; }
+.mpo[hidden], .ckb[hidden] { display: none !important; }
+.mpo:hover { background: var(--surface2); }
+.mpo:has(input:checked) { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent); font-weight: 500; }
+.mpo input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); flex: none; }
+.mpo span { min-width: 0; overflow-wrap: anywhere; }
+/* กล่องเลือกสาเหตุ: ทั้งแถวเป็นสีตามระดับ (ติ๊กแล้วเข้มขึ้น) */
+.mpo.lvc { background: color-mix(in srgb, var(--lv) 11%, var(--surface)); border-color: color-mix(in srgb, var(--lv) 45%, var(--line)); }
+.mpo.lvc + .mpo.lvc { margin-top: 5px; }
+.mpo.lvc:hover { border-color: var(--lv); background: color-mix(in srgb, var(--lv) 18%, var(--surface)); }
+.mpo.lvc input { accent-color: var(--lv); }
+.mpo.lvc:has(input:checked) { background: color-mix(in srgb, var(--lv) 26%, var(--surface)); border-color: var(--lv); box-shadow: inset 0 0 0 1px var(--lv); color: var(--ink); font-weight: 600; }
+.mpe { padding: 18px 10px; text-align: center; color: var(--muted); font-size: 13px; }
+.mpf { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-top: 1px solid var(--line); background: var(--surface); }
+.mpf .sp { flex: 1; }
+.mpf .cnt { font-size: 12.5px; color: var(--muted); }
+.mpf .cnt b { color: var(--accent); }
+@media (max-width: 600px) {
+  .mpop { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: 100%; max-height: 78vh; border-radius: 16px 16px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+/* ชิปสาเหตุในตาราง */
+.chs { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.chp { display: inline-block; max-width: 100%; padding: 2px 8px; border-radius: 10px; font-size: 12px; line-height: 1.45; background: var(--accent-soft); color: var(--accent); overflow-wrap: anywhere; }
+.chp.more { background: var(--surface2); color: var(--muted); }
+
+/* ช่องติ๊กในฟอร์ม (รายการเยอะ: เลื่อนได้ + ค้นหาได้) */
+.fg input.ckq, input.ckq { margin-bottom: 8px; }
+.ckg.scroll { max-height: 240px; overflow: auto; padding: 2px; align-content: flex-start; overscroll-behavior: contain; }
+
+/* =====================================================================
+   6. ลิ้นชักรายละเอียด
+   ===================================================================== */
+.dwrap { position: fixed; inset: 0; z-index: 35; display: grid; place-items: start center; overflow: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dback { position: fixed; inset: 0; background: rgba(20, 12, 28, .5); }
+.drawer {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 680px; margin-top: 4vh;
+  display: flex; flex-direction: column; overflow: hidden; padding: 0;
+  max-height: calc(100vh - 4vh - 32px); max-height: calc(100dvh - 4vh - 32px);
+}
+.drawer > .empty { padding: 28px 20px; }
+.dhead { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+.dbody { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 20px; }
+.dact { display: flex; align-items: center; gap: 8px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); }
+.dact .sp { flex: 1; }
+.dmeta { margin-top: 6px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; color: var(--muted); font-size: 13px; }
+.dno { display: inline-block; padding: 1px 9px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-size: 12.5px; font-weight: 600; }
+.dx { flex: none; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
+.dx:hover { color: var(--ink); border-color: var(--accent); }
+.cp { border: 0; background: none; color: var(--muted); cursor: pointer; font: inherit; font-size: 12px; padding: 1px 7px; margin-left: 6px; border-radius: 5px; }
+.cp:hover { background: var(--accent-soft); color: var(--accent); }
+.kv dd a { color: var(--accent); font-weight: 500; text-decoration: none; }
+.kv dd a:hover { text-decoration: underline; }
+.dnone { margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.dh { display: flex; align-items: flex-start; gap: 10px; }
+.dh h3 { margin: 0; font-size: 18px; line-height: 1.3; overflow-wrap: anywhere; }
+.dsec { margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .04em; }
+.dbody > .dsec:first-child { margin-top: 0; }
+.kv { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.kv dt { color: var(--muted); font-size: 12.5px; }
+.kv dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.hist { margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.hist li { padding: 6px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; flex-wrap: wrap; }
+.hist time { color: var(--muted); }
+
+/* =====================================================================
+   7. ฟอร์มเพิ่ม/แก้ไข
+   ===================================================================== */
+.modal {
+  position: fixed; inset: 0; z-index: 40; background: rgba(20, 12, 28, .5); display: grid; place-items: start center; overflow: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.mform { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0; width: 100%; max-width: 680px; margin-top: 4vh;
+  display: flex; flex-direction: column; max-height: calc(100vh - 4vh - 32px); max-height: calc(100dvh - 4vh - 32px); overflow: hidden; }
+.mform .mhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+.mform .mhead h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+.mform .mx { flex: none; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
+.mform .mx:hover { color: var(--ink); border-color: var(--accent); }
+.mform .mbody { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 16px 20px; }
+.fsec { grid-column: 1 / -1; font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .04em; padding: 10px 0 4px; border-bottom: 1px solid var(--line); }
+.fsec:first-child { padding-top: 0; }
+.req { color: var(--bad); font-weight: 600; }
+.rn { font-style: normal; color: var(--accent); font-weight: 600; }
+.fg input.invalid, .fg select.invalid { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+.fg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fg label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); font-weight: 500; min-width: 0; }
+.fg .w2 { grid-column: 1 / -1; }
+.fg input, .fg select, .fg textarea { width: 100%; font: inherit; color: var(--ink); border: 1px solid var(--line); background: var(--bg); padding: 8px 10px; border-radius: 7px; }
+.mact { display: flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap; padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); background: var(--surface); }
+.err { color: var(--bad); margin-right: auto; }
+.fg .fld { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 500; min-width: 0; }
+.ckg { display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.fg .ckb { flex-direction: row; align-items: center; gap: 7px; color: var(--ink); font-size: 14px; font-weight: 400;
+  border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 6px 10px; cursor: pointer; }
+.fg .ckb:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.fg .ckb input { width: 17px; height: 17px; padding: 0; margin: 0; accent-color: var(--accent); }
+/* ช่องติ๊กสาเหตุ: ทั้งป้ายเป็นสีตามระดับ (ยังไม่ติ๊ก = สีอ่อน, ติ๊กแล้ว = สีเข้มขึ้น) */
+.fg .ckb.lvc { background: color-mix(in srgb, var(--lv) 11%, var(--surface)); border-color: color-mix(in srgb, var(--lv) 45%, var(--line)); }
+.fg .ckb.lvc:hover { border-color: var(--lv); }
+.fg .ckb.lvc input { accent-color: var(--lv); }
+.fg .ckb.lvc:has(input:checked) { background: color-mix(in srgb, var(--lv) 26%, var(--surface)); border-color: var(--lv); box-shadow: inset 0 0 0 1px var(--lv); font-weight: 600; }
+
+/* =====================================================================
+   8. หน้าจอเล็ก / ลดการเคลื่อนไหว
+   ===================================================================== */
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 820px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side {
+    position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); gap: 10px;
+    padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));
+  }
+  nav { flex-direction: row; overflow-x: auto; gap: 4px; }
+  nav a { white-space: nowrap; padding: 8px 12px; }
+  .side-foot { flex-direction: row; align-items: center; justify-content: space-between; margin-top: 0; padding-top: 8px; }
+  .side-foot .who { min-width: 0; flex: 1; }
+  .bar { top: 0; }
+}
+@media (max-width: 600px) {
+  .dwrap { place-items: end stretch; padding: 0; }
+  .drawer { max-width: none; margin-top: 0; border-radius: 16px 16px 0 0; border-bottom: 0; max-height: 94vh; max-height: 94dvh; }
+  .dhead, .dbody, .dact { padding-left: 16px; padding-right: 16px; }
+  .modal { place-items: end stretch; padding: 0; }
+  .mform { max-width: none; margin-top: 0; border-radius: 16px 16px 0 0; border-bottom: 0; max-height: 94vh; max-height: 94dvh; }
+  .mform .mhead, .mform .mbody, .mact { padding-left: 16px; padding-right: 16px; }
+}
+@media (max-width: 520px) {
+  .fg { grid-template-columns: minmax(0, 1fr); }
+  .kpi .v { font-size: 25px; }
+  .bl { grid-template-columns: 84px minmax(0, 1fr) 54px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loadbar" class="loadbar" aria-hidden="true"><i></i></div>
+
+<!-- ===================== เข้าสู่ระบบ ===================== -->
+<div id="login" class="login" hidden>
+  <div class="lcard">
+    <div class="mark" aria-hidden="true"><img src="favicon.svg" alt=""></div>
+    <h2>ระบบติดตามคำร้อง</h2>
+    <p class="lsub">สำนักงานการไฟฟ้า</p>
+    <div class="who" id="lWho" hidden><img id="lAv" alt="" width="44" height="44"><div><b id="lName"></b><span id="lRole"></span></div></div>
+    <div id="gateMsg" class="lnote" role="status">กำลังตรวจสอบสิทธิ์ผู้ใช้…</div>
+    <div id="gWrap" hidden><div id="gBtn" style="display:flex;justify-content:center;margin:14px 0"></div></div>
+    <button class="btn pri wide" id="btnRetry" type="button" hidden>ลองอีกครั้ง</button>
+    <p class="lnote">สิทธิ์การใช้งานกำหนดจากบัญชี Google ของคุณ</p>
+  </div>
+</div>
+
+<!-- ===================== หน้าหลัก ===================== -->
+<div class="shell" hidden>
+  <aside class="side">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><img src="favicon.svg" alt=""></div>
+      <div><h1>ระบบติดตามคำร้อง</h1><p>สำนักงานการไฟฟ้า</p></div>
+    </div>
+    <nav aria-label="เมนูหลัก">
+      <a href="#dashboard" data-v="dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>ภาพรวม</span></a>
+      <a href="#daily" data-v="daily"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>รายวัน</span></a>
+      <a href="#book" data-v="book"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>สมุดคุมคำร้องใช้ไฟ</span></a>
+    </nav>
+    <div class="side-foot">
+      <div class="who" id="sWho" hidden><img id="sAv" alt="" width="34" height="34"><div><b id="sName"></b><span id="sRole"></span></div></div>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="bar"><div class="bar-in">
+      <div class="sp"></div>
+      <label class="yearsel" for="selYear" id="yearWrap" hidden>ปี พ.ศ.<select id="selYear" aria-label="เลือกปี"></select></label>
+      <button class="btn" id="btnRefresh" type="button" title="โหลดข้อมูลล่าสุดจาก Google Sheets">↻ รีเฟรช</button>
+      <button class="btn pri" id="btnAdd" type="button">+ เพิ่มคำร้อง</button>
+    </div></header>
+    <main>
+      <div id="notice"></div>
+      <div id="view"></div>
+    </main>
+  </div>
+</div>
+
+<!-- ===================== ฟอร์มเพิ่ม/แก้ไข ===================== -->
+<div id="modal" class="modal" hidden>
+  <form id="form" class="mform" autocomplete="off" novalidate>
+    <div class="mhead"><h3 id="mTitle">เพิ่มคำร้อง</h3><button type="button" class="mx" id="mClose" aria-label="ปิด">✕</button></div>
+    <div class="mbody">
+    <div class="fg">
+      <div class="fsec">ข้อมูลผู้ขอ</div>
+      <label class="w2">ชื่อผู้ขอ<input type="text" id="f_name"></label>
+      <label class="w2">ที่อยู่ลูกค้า<textarea id="f_addr" rows="2" placeholder="บ้านเลขที่ หมู่ ตำบล อำเภอ"></textarea></label>
+      <label class="w2">เบอร์โทรศัพท์<input type="text" id="f_phone" inputmode="tel"></label>
+
+      <div class="fsec">รายละเอียดคำร้อง</div>
+      <label><span>วันที่รับคำร้อง<b class="req"> *</b></span><input type="date" id="f_date"></label>
+      <label><span>เลขที่คำร้อง<b class="req"> *</b></span><input type="text" id="f_no" placeholder="กรอกเลขที่ที่สำนักงานกำหนด" maxlength="60"></label>
+      <label class="w2"><span>ประเภทคำร้อง<b class="req"> *</b></span><select id="f_type"></select></label>
+      <label class="w2">สถานะ<select id="f_status"></select></label>
+
+      <div class="fsec">ข้อมูลหน้างาน</div>
+      <label>เฟส<select id="f_phase"></select></label>
+      <label>ขนาดมิเตอร์<input type="text" id="f_size" list="sizes" placeholder="เช่น 5(15)"><datalist id="sizes"><option value="5(15)"><option value="15(45)"><option value="30(100)"><option value="5(100)"></datalist></label>
+      <label>เฟสที่เชื่อมต่อ (ด้านเข้า)<select id="f_in"></select></label>
+      <label>ขนาดเสา (เมตร)<select id="f_pole"></select></label>
+      <label class="w2">สายจดหน่วย<input type="text" id="f_route"></label>
+
+      <label class="w2">หมายเหตุ<textarea id="f_note" rows="2"></textarea></label>
+    </div>
+    </div>
+    <div class="mact"><span id="mErr" class="err" role="alert"></span><button type="button" class="btn" id="mCancel">ยกเลิก</button><button type="submit" class="btn pri" id="mSave" title="Ctrl + Enter">บันทึก</button></div>
+  </form>
+</div>
+
+<!-- ===================== รายละเอียดคำร้อง ===================== -->
+<div id="dwrap" class="dwrap" hidden>
+  <div class="dback"></div>
+  <aside id="drawer" class="drawer" aria-label="รายละเอียดคำร้อง"></aside>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+/* =====================================================================
+   1. ค่าคงที่และตัวช่วย
+   ===================================================================== */
+const TYPES  = ['EV Charger', 'ขอติดตั้งใหม่', 'ขอใช้ไฟชั่วคราว', 'เพิ่มขนาด', 'เลิกใช้', 'ย้าย', 'เพิ่ม+ย้าย', 'โอน+ย้าย', 'เปลี่ยนประเภท', 'โอน+ย้าย+เพิ่ม', 'โอน+เปลี่ยนประเภท TOU', 'โอน+เพิ่มEV', 'ลดขนาด', 'TOU', 'เพิ่มขนาด EV', 'รับเงินประกัน', 'ย้าย+เพิ่ม EV', 'ตั้งใหม่ + เปลี่ยนประเภท', 'TOU + EV', 'เพิ่มขนาด + EV + TOU', 'โอน + เพิ่ม + EV + TOU', 'ขอเปลี่ยนชั่วคราวเป็นอัตราประเภท 1', 'เปลี่ยนอัตราที่ป่า', 'ประกอบ มป. 160KVA'];
+const STATUS = ['ผ่าน', 'ไม่ผ่าน'];
+const REASONS = ["รอตรวจ", "สายเมนไม่เรียยร้อย", "ยังไม่ได้เดินระบบ 3P", "รอเดินสายเมน", "รอโทรเเจ้งให้ชำระเงิน", "ทำ wom เสร็จแล้ว", "รอทำเอกสาร", "ตรวจผ่านเเล้วรอใบเเจ้งหนี้", "รอลูกค้าเซ็นเอกสาร", "ยังไม่ขยายเขต", "ชำระเงิน", "เอกสารไม่ครบ", "รอติดตั้ง", "รอเซ็น", "ทำเอกสารเพิ่มขนาด", "เเจ้งลูกค้า", "ยังไม่ได้เดินสายเมนเข้าเสาไฟฟ้า", "ให้เปลี่ยนสายเมนใหม่", "ยังไม่ได้เดินสายเมน", "สายเมนสั้นเกินไป", "ทำเรื่องขยายเขตปรับปรุงหม้อแปลง", "รอเดินสายเมนเข้าเสาไฟต้นใหม่ที่ขยายให้เรีบยร้อย", "ระบบไฟฟ้าภายในไม่เรียบร้อย", "เสาไฟฟ้าไม่ตรงหน้าบ้าน ต้องทำเรื่องปักเสาเเซม", "ให้เข้ามาทำเรื่องขยายเนื่องจากเสาไฟไม่ได้อยู่หน้าที่", "ใช้สายเมนไม่ถูกต้องตามมาตรฐาน,ปลายสายสั้นเกินไป", "ขนาดสายเมนไม่ถูกต้องตามมาตรฐาน ต้องเปลี่ยนเป็นเบอร์ 25", "รอขยายเขต", "ภายในยังไม่เรียบร้อย", "สายเมนไม่ถูกต้องมาตรฐาน", "ค้างเดินวงจรที่ 2", "สายเมนไม่ถูกต้อง", "ไม่ได้มัดสายเมนเข้าเเร็ค", "ให้เดินสายเมนใหม่", "ต้องยื่นขยายเขตเพิ่มเฟส", "รอตั้งตู้เบรกเกอร์", "เดินสายเมนไม่ถูกต้อง", "ต้องเดินสายเมนเข้าเสาไฟฟ้า", "รอแก้ไขสายเมนใหม่", "รอแก้ไขวงจรที่ 2", "ระบบไฟภายในยังไม่เสร็จ", "รอดึงสาย", "รอปรับปรุงระบบ", "รอติดตั้งวอลชาร์จ", "รอทำระบบ 3 เฟส,ดึงสาย", "รอทำเอกสาร ค้างค่าไฟ !", "ส่งเรื่องให้แผนกมิเตอร์เเล้ว", "ขาดเอกสารมอบอำนาจ", "สำรวจหน้างานก่อน", "ผชฟ เเจ้งว่าใส่สายมิเตอร์สลับ", "โทรเเจ้งล่วงหน้าก่อน", "ขาดสัญญาเช่า", "ไม่ได้มาร์เฟสที่ปลายสาย", "ขอด่วนมีงานขึ้นบ้านใหม่", "มีเมนเดิม", "ให้ใส่หัวงูเห่าและมาร์คปลายสาย", "รอตารางโหลด", "แก้ไขเเล้ว", "ขาดสเปควอร์ชาจ /ใบจองรถ", "ผชฟ.เซ็น TOU", "เบอร์ไม่ถูกต้อง - ไม่สามารถติดต่อได้", "เขตป่าสงวน", "รอหัวหน้าตัดสินใจ", "ขาดเอกสาร Wallcharge", "รอติดแร็ค", "ขาดสำเนาทะเบียนบ้าน", "รอ ผชฟ. ติดสินใจ", "ไม่มีระบบแรงต่ำ", "เสนอผจก.", "รอถ่ายรูปตู้(เข้าดูหน้างานไม่ได้)", "ยังไม่ได้รวบสายเมน", "ขาดอากรสแตมป์", "มีมิเตอร์อยู่เเล้ว", "ต้องทำเรื่องปักเสาแซมไลน์", "นัดตรวจ", "เสาเอนเอียง สายหย่อน", "ไม่มีระบบ 3 เฟส", "ทำเอกสารเพิ่มขนาดเเล้ว"];
+/* ระดับความเสี่ยงของสาเหตุ: 1 = วิกฤต (แดง) → 5 = สำเร็จ (เขียว) แก้ระดับของแต่ละข้อได้ที่ REASON_LV */
+const LV_NAMES = ['ยังไม่จัดระดับ', 'วิกฤต', 'ต้องแก้ไข', 'รอดำเนินการ', 'ใกล้เสร็จ', 'สำเร็จ'];
+const REASON_LV = {"รอตรวจ": 3, "สายเมนไม่เรียยร้อย": 2, "ยังไม่ได้เดินระบบ 3P": 2, "รอเดินสายเมน": 3, "รอโทรเเจ้งให้ชำระเงิน": 4, "ทำ wom เสร็จแล้ว": 5, "รอทำเอกสาร": 3, "ตรวจผ่านเเล้วรอใบเเจ้งหนี้": 4, "รอลูกค้าเซ็นเอกสาร": 3, "ยังไม่ขยายเขต": 1, "ชำระเงิน": 4, "เอกสารไม่ครบ": 2, "รอติดตั้ง": 4, "รอเซ็น": 3, "ทำเอกสารเพิ่มขนาด": 3, "เเจ้งลูกค้า": 3, "ยังไม่ได้เดินสายเมนเข้าเสาไฟฟ้า": 2, "ให้เปลี่ยนสายเมนใหม่": 2, "ยังไม่ได้เดินสายเมน": 2, "สายเมนสั้นเกินไป": 2, "ทำเรื่องขยายเขตปรับปรุงหม้อแปลง": 1, "รอเดินสายเมนเข้าเสาไฟต้นใหม่ที่ขยายให้เรีบยร้อย": 3, "ระบบไฟฟ้าภายในไม่เรียบร้อย": 2, "เสาไฟฟ้าไม่ตรงหน้าบ้าน ต้องทำเรื่องปักเสาเเซม": 1, "ให้เข้ามาทำเรื่องขยายเนื่องจากเสาไฟไม่ได้อยู่หน้าที่": 1, "ใช้สายเมนไม่ถูกต้องตามมาตรฐาน,ปลายสายสั้นเกินไป": 2, "ขนาดสายเมนไม่ถูกต้องตามมาตรฐาน ต้องเปลี่ยนเป็นเบอร์ 25": 2, "รอขยายเขต": 1, "ภายในยังไม่เรียบร้อย": 2, "สายเมนไม่ถูกต้องมาตรฐาน": 2, "ค้างเดินวงจรที่ 2": 2, "สายเมนไม่ถูกต้อง": 2, "ไม่ได้มัดสายเมนเข้าเเร็ค": 2, "ให้เดินสายเมนใหม่": 2, "ต้องยื่นขยายเขตเพิ่มเฟส": 1, "รอตั้งตู้เบรกเกอร์": 3, "เดินสายเมนไม่ถูกต้อง": 2, "ต้องเดินสายเมนเข้าเสาไฟฟ้า": 2, "รอแก้ไขสายเมนใหม่": 3, "รอแก้ไขวงจรที่ 2": 3, "ระบบไฟภายในยังไม่เสร็จ": 2, "รอดึงสาย": 3, "รอปรับปรุงระบบ": 3, "รอติดตั้งวอลชาร์จ": 4, "รอทำระบบ 3 เฟส,ดึงสาย": 3, "รอทำเอกสาร ค้างค่าไฟ !": 2, "ส่งเรื่องให้แผนกมิเตอร์เเล้ว": 4, "ขาดเอกสารมอบอำนาจ": 2, "สำรวจหน้างานก่อน": 3, "ผชฟ เเจ้งว่าใส่สายมิเตอร์สลับ": 2, "โทรเเจ้งล่วงหน้าก่อน": 3, "ขาดสัญญาเช่า": 2, "ไม่ได้มาร์เฟสที่ปลายสาย": 2, "ขอด่วนมีงานขึ้นบ้านใหม่": 1, "มีเมนเดิม": 4, "ให้ใส่หัวงูเห่าและมาร์คปลายสาย": 2, "รอตารางโหลด": 3, "แก้ไขเเล้ว": 5, "ขาดสเปควอร์ชาจ /ใบจองรถ": 2, "ผชฟ.เซ็น TOU": 4, "เบอร์ไม่ถูกต้อง - ไม่สามารถติดต่อได้": 2, "เขตป่าสงวน": 1, "รอหัวหน้าตัดสินใจ": 3, "ขาดเอกสาร Wallcharge": 2, "รอติดแร็ค": 3, "ขาดสำเนาทะเบียนบ้าน": 2, "รอ ผชฟ. ติดสินใจ": 3, "ไม่มีระบบแรงต่ำ": 1, "เสนอผจก.": 4, "รอถ่ายรูปตู้(เข้าดูหน้างานไม่ได้)": 3, "ยังไม่ได้รวบสายเมน": 2, "ขาดอากรสแตมป์": 2, "มีมิเตอร์อยู่เเล้ว": 2, "ต้องทำเรื่องปักเสาแซมไลน์": 1, "นัดตรวจ": 4, "เสาเอนเอียง สายหย่อน": 1, "ไม่มีระบบ 3 เฟส": 1, "ทำเอกสารเพิ่มขนาดเเล้ว": 5};
+function reasonLv(x) {
+  if (REASON_LV[x]) return REASON_LV[x];
+  if (/ขยายเขต|ปักเสา|ป่าสงวน|ด่วน/.test(x)) return 1;   // ข้อใหม่ที่ยังไม่ได้ใส่ในตาราง: เดาจากคำ
+  if (/เสร็จ|เเล้ว|แล้ว/.test(x) && !/รอ|ไม่|ยัง/.test(x)) return 5;
+  if (/^รอ/.test(x)) return 3;
+  if (/ไม่|ขาด|ยัง|ต้อง|ให้/.test(x)) return 2;
+  return 0;
+}
+const lvVar = n => 'var(--lv' + (n || 0) + ')';
+const TCOL   = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
+const PAGE_SIZE = 50, DAILY_PAGE_SIZE = 100;
+const SEARCH_DELAY = 150;        // ms หลังหยุดพิมพ์จึงค้นหา
+const FRESH_MS = 10000;          // ข้อมูลที่โหลดไว้ไม่เกินนี้ ไม่ต้องโหลดซ้ำ
+const POLL_MS = 2000;             // ถามบ่อยเมื่อกำลังใช้งาน
+const POLL_IDLE_MS = 6000;        // ถามห่างขึ้นเมื่อไม่ได้แตะหน้าจอเกิน 2 นาที (ประหยัดโควตา)             // ถามเลขรุ่นข้อมูลทุกกี่ ms เพื่อให้เห็นการแก้ในชีตทันที (เพิ่มค่านี้ถ้าอยากประหยัดโควตา)
+const AUTO_REFRESH_MS = 60000;   // โหลดข้อมูลล่าสุดเงียบ ๆ เพื่อให้เห็นงานที่เจ้าหน้าที่คนอื่นแก้
+/* ===== ตั้งค่า 2 ค่านี้ก่อนอัปโหลดขึ้น GitHub ===== */
+const API_URL = 'https://script.google.com/macros/s/AKfycbyj8lB-bbSbE2v81er2KJp-4G34b-bdXtLFINDodVNgKaXT6TTcWgHg9NrR98JF3EZZlg/exec';
+const GOOGLE_CLIENT_ID = '699977323333-4bdd7uvqs8ubv0tak9r40n59bv01eej8.apps.googleusercontent.com';
+const NEED_LOGIN = 'กรุณาเข้าสู่ระบบด้วยบัญชี Google อีกครั้ง';
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad  = n => String(n).padStart(2, '0');
+const dkey = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const pkey = k => { const a = String(k || '').split('-').map(Number); return new Date(a[0], a[1] - 1, a[2] || 1); };
+const TODAY = dkey(new Date());
+const fmt  = (k, o) => pkey(k).toLocaleDateString('th-TH', o || { day: 'numeric', month: 'short', year: 'numeric' });
+const fmtM = m => pkey(m + '-01').toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+
+/* ค่าว่าง / "-" / "รอผลตรวจ" ถือว่ายังไม่ระบุ = รอผลตรวจ (ตัวเลือกเดียว ไม่ซ้ำ) */
+const normSt = s => { const t = String(s == null ? '' : s).trim(); return /^([-–—]+|รอผลตรวจ)$/.test(t) ? '' : t; };
+const statusCls = s => {
+  const t = normSt(s);
+  if (t === 'ผ่าน' || t.includes('เสร็จ')) return 'done';
+  if (t === 'ไม่ผ่าน') return 'fail';
+  return !t || t.includes('รอ') ? 'wait' : 'prog';
+};
+const isDone    = r => { const t = normSt(r.status); return t === 'ผ่าน' || t === 'ไม่ผ่าน' || t.includes('เสร็จ'); };
+const typeIdx   = t => { const i = typeList().indexOf(t); return i < 0 || i > 5 ? 5 : i; };
+const errMsg    = e => { console.error(e); return e && e.message ? e.message : 'เกิดข้อผิดพลาด กรุณาลองใหม่'; };
+const sleep     = ms => new Promise(r => setTimeout(r, ms));
+
+/* =====================================================================
+   2. สถานะของหน้าเว็บ
+   ===================================================================== */
+const state = {
+  view: 'dashboard', canWrite: false, canDelete: false, me: null,
+  year: '', month: '', day: TODAY,            // ตัวกรองปี / เดือนของภาพรวม / วันของหน้ารายวัน
+  q: '', dq: '', ft: '', fs: '', fm: '', page: 0,   // ค้นหา + ตัวกรองของหน้ารายการ
+  rows: [], total: 0, pages: 1, openCount: 0, typeCounts: {}, types: [], reasons: [], typeOpts: [], reasonOpts: [], months: [], years: [],
+  summary: null, detail: null, detailData: null, frame: '',
+  by: '', bm: 'auto', bq: '', bt: [], br: [], bs: '', bookMonths: []   // สมุดคุมคำร้อง: ปี / เดือน / ค้นหา / ประเภท(หลายค่า) / สาเหตุ(หลายค่า) / สถานะ
+};
+let editing = null;
+let authed = false, started = false;
+let toastTimer = null, searchTimer = null;
+
+/* =====================================================================
+   3. เรียก Apps Script / แถบโหลด / แคชฝั่งหน้าเว็บ
+   ===================================================================== */
+/* ----- เข้าสู่ระบบด้วย Google (ID token อายุ ~1 ชม. ต่ออายุอัตโนมัติเมื่อใกล้หมด) ----- */
+let idToken = '', tokenExp = 0, tokenWaiters = [], gisReady = false, wantBtn = false;
+
+function parseJwt(t) {
+  try {
+    const p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(p), c => c.charCodeAt(0))));
+  } catch (e) { return null; }
+}
+const tokenOk = () => !!idToken && tokenExp - Date.now() > 60000;
+
+function onCredential(resp) {
+  const p = resp && resp.credential ? parseJwt(resp.credential) : null;
+  if (!p) return;
+  idToken = resp.credential; tokenExp = p.exp * 1000;
+  try { sessionStorage.setItem('idt', idToken); } catch (e) { /* ไม่เป็นไร */ }
+  const ws = tokenWaiters; tokenWaiters = [];
+  ws.forEach(f => f(idToken));
+  if (!authed) checkAccess();
+}
+
+function initGoogle() {
+  if (gisReady || !(window.google && google.accounts && google.accounts.id)) return;
+  gisReady = true;
+  google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onCredential, auto_select: true, cancel_on_tap_outside: false });
+  if (wantBtn) renderLoginButton();
+}
+window.initGoogle = initGoogle;
+
+function renderLoginButton() {
+  wantBtn = true;
+  $('#gateMsg').textContent = 'กรุณาเข้าสู่ระบบด้วยบัญชี Google เพื่อใช้งาน';
+  $('#btnRetry').hidden = true;
+  $('#gWrap').hidden = false;
+  showGate();
+  if (!gisReady) { initGoogle(); return; }
+  google.accounts.id.renderButton($('#gBtn'), { theme: 'outline', size: 'large', locale: 'th', text: 'signin_with' });
+  google.accounts.id.prompt();
+}
+
+function ensureToken() {
+  if (tokenOk()) return Promise.resolve(idToken);
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(NEED_LOGIN)), 10000);
+    tokenWaiters.push(tk => { clearTimeout(t); resolve(tk); });
+    try { google.accounts.id.prompt(); } catch (e) { clearTimeout(t); reject(new Error(NEED_LOGIN)); }
+  });
+}
+
+/** เรียกฟังก์ชันใน Apps Script ผ่าน fetch (ใช้ text/plain เพื่อไม่ให้เบราว์เซอร์ส่ง preflight ที่ Apps Script ไม่รองรับ) */
+async function gas(name, ...args) {
+  const token = await ensureToken();
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ fn: name, args: args, token: token })
+    });
+  } catch (e) {
+    throw new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ต หรือ API_URL / การ Deploy (ต้องเป็น Anyone)');
+  }
+  let j;
+  try { j = await res.json(); }
+  catch (e) { throw new Error('เซิร์ฟเวอร์ตอบกลับผิดรูปแบบ ตรวจสอบ API_URL และการ Deploy ว่าเป็น Who has access = Anyone'); }
+  if (!j.ok) throw new Error(j.error || 'เกิดข้อผิดพลาด');
+  return j.data;
+}
+
+let busy = 0;
+function setBusy(delta) {
+  busy = Math.max(0, busy + delta);
+  $('#loadbar').classList.toggle('on', busy > 0);
+}
+
+/** quiet = true จะไม่แสดงแถบโหลด (ใช้ตอนเปลี่ยนสถานะ) */
+async function call(name, args, quiet) {
+  if (!quiet) setBusy(1);
+  try { return await gas(name, ...args); }
+  finally { if (!quiet) setBusy(-1); }
+}
+
+const memo = new Map();     // key -> { t, data }  ผลที่โหลดมาแล้ว ใช้แสดงทันทีเมื่อกลับมาหน้าเดิม
+const sigs = new Map();     // view -> ข้อความย่อของข้อมูลที่แสดงอยู่ ใช้ข้ามการวาดซ้ำถ้าไม่เปลี่ยน
+let seq = 0;                // ลำดับการโหลด ใช้ทิ้งผลที่มาช้ากว่าคำขอใหม่
+let lastLoad = 0;
+
+function requestFor(view) {
+  if (view === 'dashboard') {
+    return { key: 'd|' + state.year + '|' + state.month, name: 'getDashboardData', args: [state.year, state.month] };
+  }
+  if (view === 'daily') {
+    const p = { date: state.day, page: state.page, pageSize: DAILY_PAGE_SIZE, q: state.dq.trim() };
+    return { key: 'y|' + JSON.stringify(p), name: 'getRequestsPage', args: [p] };
+  }
+  if (view === 'book') {
+    const b = { year: state.by, month: state.bm, page: state.page, pageSize: PAGE_SIZE, type: state.bt, reason: state.br, status: state.bs, q: state.bq.trim() };
+    return { key: 'b|' + JSON.stringify(b), name: 'getBookData', args: [b] };
+  }
+  const p = { page: state.page, pageSize: PAGE_SIZE, year: state.year, month: state.fm, type: state.ft, status: state.fs, q: state.q.trim() };
+  return { key: 'a|' + JSON.stringify(p), name: 'getRequestsPage', args: [p] };
+}
+
+/**
+ * โหลดข้อมูลของหน้าปัจจุบัน
+ *  - เจอข้อมูลที่เคยโหลดไว้ → แสดงทันที แล้วค่อยโหลดใหม่เงียบ ๆ ถ้าเก่าเกิน FRESH_MS
+ *  - ระหว่างโหลดตารางเดิมยังอยู่ มีแค่แถบบาง ๆ ที่ขอบบน
+ *  - silent = ไม่ขึ้นแถบโหลด, force = โหลดใหม่เสมอ
+ */
+async function loadView({ silent = false, force = false } = {}) {
+  const view = state.view, my = ++seq, req = requestFor(view);
+  const hit = memo.get(req.key);
+  if (hit && !force) {
+    showData(view, hit.data);
+    if (Date.now() - hit.t < FRESH_MS) return;
+  }
+  if (!silent) setBusy(1);
+  try {
+    let data;
+    try { data = await gas(req.name, ...req.args); }
+    catch (e) { await sleep(500); data = await gas(req.name, ...req.args); }   // ลองซ้ำ 1 ครั้ง
+    memo.set(req.key, { t: Date.now(), data });
+    lastLoad = Date.now();
+    if (my !== seq || state.view !== view) return;
+    setNotice('');
+    showData(view, data);
+  } catch (e) {
+    if (my !== seq || state.view !== view) return;
+    setNotice(errMsg(e), true);
+    if (!state.rows.length && !state.summary) clearPlaceholder(view);
+  } finally {
+    if (!silent) setBusy(-1);
+  }
+}
+
+function showData(view, data) {
+  const sig = JSON.stringify(data);
+  if (sigs.get(view) === sig) return;
+  sigs.set(view, sig);
+  if (data.years) state.years = data.years;
+  updateYearSelector();
+  if (view === 'book') {
+    const pg = data.page;
+    state.by = data.year; state.bm = data.month; state.bookMonths = data.months || [];
+    state.rows = pg.rows; state.total = pg.total; state.pages = pg.pages; state.page = pg.page;
+    state.openCount = pg.openCount || 0; state.types = pg.types || []; state.reasons = pg.reasons || [];
+    renderList();
+    return;
+  }
+  if (view === 'dashboard') {
+    state.summary = data;
+    state.month = data.month;
+    renderDashboard();
+    return;
+  }
+  state.rows = data.rows;
+  state.total = data.total;
+  state.pages = data.pages;
+  state.page = data.page;
+  state.openCount = data.openCount || 0;
+  state.typeCounts = data.typeCounts || {};
+  state.types = data.types || [];
+  state.months = data.months || [];
+  renderList();
+}
+
+function clearPlaceholder(view) {
+  if (view === 'dashboard') $('#view').innerHTML = '<div class="panel empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  else if ($('#tbl')) $('#tbl').innerHTML = '<div class="panel empty">โหลดข้อมูลไม่สำเร็จ</div>';
+}
+
+/** หลังเพิ่ม/แก้/ลบ: ล้างข้อมูลที่จำไว้ แล้วโหลดใหม่ (ตารางเดิมยังแสดงอยู่) */
+let optSig = '';
+/** อ่านรายการตัวเลือกประเภท/สาเหตุจาก dropdown ในชีต (เปลี่ยนเมื่อไหร่ก็วาดหน้าใหม่) */
+async function loadOptions() {
+  try {
+    const o = await gas('getOptions');
+    const sig = JSON.stringify(o || {});
+    if (sig === optSig) return;
+    optSig = sig;
+    state.typeOpts = (o && o.types) || [];
+    state.reasonOpts = (o && o.reasons) || [];
+    if (started) {
+      sigs.clear();
+      if (state.view === 'dashboard') renderDashboard(); else { renderList(); renderBookFilters(); }
+    }
+  } catch (e) { console.error('getOptions', e); }
+}
+
+function reloadAfterChange() {
+  loadOptions();
+  memo.clear();
+  sigs.clear();
+  return loadView({ force: true });
+}
+
+/* =====================================================================
+   4. ข้อความแจ้งเตือน / Toast
+   ===================================================================== */
+function setNotice(msg, retry) {
+  $('#notice').innerHTML = msg
+    ? '<div class="notice"><span>โหลดข้อมูลไม่สำเร็จ: ' + esc(msg) + '</span>' + (retry ? '<button class="btn" type="button" data-retry="1">ลองใหม่</button>' : '') + '</div>'
+    : '';
+}
+
+function toast(m) {
+  const t = $('#toast');
+  t.textContent = m;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, 2800);
+}
+
+/* =====================================================================
+   5. ส่วนประกอบที่ใช้ร่วมกัน (ตัวเลือก, ปุ่มสถานะ, แถวตาราง)
+   ===================================================================== */
+/** กล่องติ๊กหลายข้อในฟอร์ม (ค่าเก่าที่ไม่อยู่ในรายการ จะแสดงให้ติ๊กต่อได้) */
+function fillChecks(id, list, selected, colored) {
+  const all = uniq([...list, ...selected]);
+  const box = $(id);
+  const old = box.previousElementSibling;
+  if (old && old.classList.contains('ckq')) old.remove();
+  box.classList.toggle('scroll', all.length > 10);
+  if (all.length > 10) box.insertAdjacentHTML('beforebegin', '<input type="search" class="ckq" placeholder="พิมพ์ค้นหา..." aria-label="ค้นหาตัวเลือก" autocomplete="off" data-for="' + id + '">');
+  box.innerHTML = all.map(x =>
+    '<label class="ckb' + (colored ? ' lvc' : '') + '"' + (colored ? ' style="--lv:' + lvVar(reasonLv(x)) + '"' : '') + '><input type="checkbox" value="' + esc(x) + '"' + (selected.includes(x) ? ' checked' : '') + '><span>' + esc(x) + '</span></label>').join('');
+}
+const getChecks = id => $$(id + ' input:checked').map(i => i.value);
+
+function fillSel(id, arr, cur) {
+  const el = $(id);
+  el.innerHTML = arr.map(x => '<option value="' + esc(x) + '">' + esc(x === '' ? '— ยังไม่ระบุ —' : x) + '</option>').join('');
+  if (cur && !arr.includes(cur)) el.insertAdjacentHTML('beforeend', '<option value="' + esc(cur) + '">' + esc(cur) + '</option>');
+  el.value = cur || arr[0] || '';
+}
+
+/** ตั้งตัวเลือกของ <select> ใหม่เฉพาะเมื่อรายการเปลี่ยน (ไม่รบกวนตอนผู้ใช้กำลังเลือก) */
+function setOptions(sel, items, cur) {
+  const list = items.slice();
+  if (cur && !list.some(x => x[0] === cur)) list.push([cur, cur]);
+  const sig = JSON.stringify(list) + '|' + cur;
+  if (sel.dataset.sig === sig) return;
+  sel.dataset.sig = sig;
+  sel.innerHTML = list.map(x => '<option value="' + esc(x[0]) + '">' + esc(x[1]) + '</option>').join('');
+  sel.value = cur;
+}
+
+function statusCell(r, big) {
+  const cur = normSt(r.status);
+  if (!state.canWrite || !r.id) return '<span class="pill ' + statusCls(cur) + '">' + esc(cur || 'รอผลตรวจ') + '</span>';
+  const opts = [...new Set(['', ...STATUS, cur])]
+    .map(x => '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>' + esc(x === '' ? '— รอผลตรวจ —' : x) + '</option>').join('');
+  return '<select class="st ' + statusCls(cur) + (big ? ' big' : '') + '" data-st="' + esc(r.id) + '">' + opts + '</select>';
+}
+
+/* ----- ประเภท / สาเหตุ เลือกได้หลายรายการ (เก็บในช่องเดียวคั่นด้วยจุลภาค เช่น "รอเซ็น, รอตรวจ") ----- */
+/* ตัวเลือกที่มี , อยู่ในชื่อ (เช่น "ใช้สายเมน...,ปลายสายสั้นเกินไป") ต้องไม่ถูกตัดเป็น 2 รายการ */
+const commaOpts = () => [...new Set([...REASONS, ...(state.reasonOpts || [])].filter(x => x.indexOf(',') >= 0))].sort((a, b) => b.length - a.length);
+const splitMulti = s => {
+  let t = String(s == null ? '' : s);
+  if (t.indexOf(',') < 0) return t.trim() ? [t.trim()] : [];
+  const keep = [];
+  commaOpts().forEach(o => { if (t.indexOf(o) >= 0) { t = t.split(o).join('\u0001' + keep.length + '\u0001'); keep.push(o); } });
+  return t.split(',').map(x => x.trim().replace(/\u0001(\d+)\u0001/g, (m, i) => keep[+i])).filter(Boolean);
+};
+const uniq = a => [...new Set(a)];
+/* รายการตัวเลือก: ใช้ตาม dropdown ในชีต ถ้าอ่านไม่ได้ใช้รายการตั้งต้นในโค้ด */
+const typeList = () => uniq(state.typeOpts && state.typeOpts.length ? state.typeOpts : TYPES);
+const reasonList = () => uniq(state.reasonOpts && state.reasonOpts.length ? state.reasonOpts : REASONS);
+
+function typeTags(v) {
+  const a = splitMulti(v);
+  return a.length
+    ? a.map(t => '<span class="tg"><i class="dot" style="background:' + TCOL[typeIdx(t)] + '"></i>' + esc(t) + '</span>').join('')
+    : '-';
+}
+
+/** เรียงสาเหตุจากรุนแรงสุด (แดง) ไปสำเร็จ (เขียว) ข้อที่ยังไม่จัดระดับอยู่ท้าย */
+function sortByLv(arr) {
+  const k = x => { const n = reasonLv(x); return n || 9; };
+  return arr.map((x, i) => [x, i]).sort((a, b) => k(a[0]) - k(b[0]) || a[1] - b[1]).map(p => p[0]);
+}
+/** สีแถบด้านซ้ายของช่อง = ระดับที่เสี่ยงที่สุดในที่เลือก */
+function worstLv(arr) {
+  const ns = arr.map(reasonLv).filter(Boolean);
+  return ns.length ? Math.min(...ns) : 0;
+}
+/** full = true: แสดงทุกข้อเป็นบรรทัด (ใช้ในลิ้นชักรายละเอียด) / false: ช่องเดียวแบบกะทัดรัด = ข้อที่เสี่ยงที่สุด + จำนวนที่เหลือ */
+function msInner(arr, placeholder, full) {
+  let body;
+  if (!arr.length) body = '<span class="ph">' + esc(placeholder) + '</span>';
+  else if (full) body = '<span class="rls">' + sortByLv(arr).map(x => '<span class="rl" style="--lv:' + lvVar(reasonLv(x)) + '"><span>' + esc(x) + '</span></span>').join('') + '</span>';
+  else {
+    const top = sortByLv(arr)[0], more = arr.length - 1;
+    body = '<span class="rl one"><span class="t">' + esc(top) + '</span>' + (more ? '<b class="mo">+' + more + '</b>' : '') + '</span>';
+  }
+  return '<span class="mst">' + body + '</span><span class="car" aria-hidden="true">▾</span>';
+}
+const reasonTip = arr => arr.length > 1 ? sortByLv(arr).join('\n') : '';
+
+function reasonCell(r, big) {
+  const arr = splitMulti(r.reason);
+  if (!state.canWrite || !r.id) return arr.length ? '<span class="rls">' + sortByLv(arr).map(x => '<span class="rl" style="--lv:' + lvVar(reasonLv(x)) + '"><span>' + esc(x) + '</span></span>').join('') + '</span>' : '<span style="color:var(--muted)">-</span>';
+  return '<button type="button" class="st rs msb' + (big ? ' big' : '') + '" style="--lv:' + lvVar(worstLv(arr) || null) + '" title="' + esc(reasonTip(arr)) + '" data-ms="reason" data-id="' + esc(r.id)
+    + '" aria-haspopup="dialog" aria-label="สาเหตุ (เลือกได้หลายข้อ)">' + msInner(arr, '— ยังไม่ระบุ —', big) + '</button>';
+}
+
+let pop = null;   // กล่องติ๊กที่เปิดอยู่ { el, anchor, opts, sel, before, apply }
+
+function msSpec(kind, id) {
+  if (kind === 'reason') {
+    const cur = splitMulti(currentReason(id));
+    return { opts: uniq([...reasonList(), ...cur]).map(x => [x, x]), sel: cur, apply: arr => saveReason(id, arr) };
+  }
+  if (kind === 'bt') {
+    return {
+      opts: uniq([...typeList(), ...(state.types || []), ...state.bt]).map(x => [x, x]), sel: state.bt.slice(),
+      apply: arr => { state.bt = arr; state.page = 0; renderBookFilters(); loadView(); }
+    };
+  }
+  const known = uniq([...reasonList(), ...(state.reasons || []), ...state.br.filter(x => x !== '__none')]);
+  return {
+    opts: [['__none', 'ยังไม่ระบุสาเหตุ'], ...known.map(x => [x, x])], sel: state.br.slice(),
+    apply: arr => { state.br = arr; state.page = 0; renderBookFilters(); loadView(); }
+  };
+}
+
+function openMs(btn) {
+  const spec = msSpec(btn.dataset.ms, btn.dataset.id);
+  const sel = new Set(spec.sel);
+  const el = document.createElement('div');
+  el.id = 'mpop'; el.className = 'mpop';
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'เลือกได้หลายรายการ');
+  const searchable = spec.opts.length > 8;
+  const colored = btn.dataset.ms !== 'bt';
+  el.innerHTML = '<div class="mph">'
+      + (searchable ? '<input type="search" class="mpq" placeholder="พิมพ์ค้นหา..." aria-label="ค้นหาตัวเลือก" autocomplete="off">' : '')
+      + '<div class="mpi"><span class="mpn"></span><button type="button" class="mpt" data-pop="only"></button></div></div>'
+    + '<div class="mpl">' + spec.opts.map(o =>
+      '<label class="mpo' + (colored ? ' lvc' : '') + '" style="--lv:' + lvVar(colored && o[0] !== '__none' ? reasonLv(o[0]) : 0) + '"><input type="checkbox" value="' + esc(o[0]) + '"' + (sel.has(o[0]) ? ' checked' : '') + '><span>' + esc(o[1]) + '</span></label>').join('')
+    + '<div class="mpe" hidden>ไม่พบรายการที่ค้นหา</div></div>'
+    + '<div class="mpf"><span class="cnt"></span><span class="sp"></span><button type="button" class="btn" data-pop="clear">ล้าง</button><button type="button" class="btn pri" data-pop="done">เสร็จ</button></div>';
+  document.body.appendChild(el);
+  pop = { el, anchor: btn, opts: spec.opts, sel, apply: spec.apply, only: sel.size > 0, keep: new Set(sel), before: spec.opts.filter(o => sel.has(o[0])).map(o => o[0]).join('\n') };
+  btn.setAttribute('aria-expanded', 'true');
+  updatePopMeta();
+  placePop();
+  const first = searchable ? el.querySelector('.mpq') : el.querySelector('input');
+  if (first) first.focus({ preventScroll: true });
+}
+
+/** กรองรายการตามคำค้นและ "เฉพาะที่เลือก" แล้วอัปเดตตัวนับ */
+function updatePopMeta() {
+  if (!pop) return;
+  const q = ((pop.el.querySelector('.mpq') || {}).value || '').trim().toLocaleLowerCase();
+  let shown = 0;
+  pop.el.querySelectorAll('.mpo').forEach(l => {
+    const inp = l.querySelector('input');
+    const ok = (!q || l.textContent.toLocaleLowerCase().indexOf(q) >= 0) && (q || !pop.only || pop.keep.has(inp.value));   // โหมดเฉพาะที่เลือก: ถ้าพิมพ์ค้นหา จะค้นจากทุกรายการ
+    l.hidden = !ok;
+    if (ok) shown++;
+  });
+  const empty = pop.el.querySelector('.mpe');
+  if (empty) empty.hidden = shown > 0;
+  const n = pop.el.querySelector('.mpn');
+  if (n) n.textContent = pop.only && !q ? 'แสดงเฉพาะที่เลือก' : 'ทั้งหมด ' + pop.opts.length + ' รายการ';
+  const tg = pop.el.querySelector('.mpt');
+  if (tg) { tg.hidden = pop.keep.size === 0; tg.textContent = pop.only ? '+ เพิ่ม / เปลี่ยนรายการ' : 'เฉพาะที่เลือก'; }
+  placePop();
+  const c = pop.el.querySelector('.cnt');
+  if (c) c.innerHTML = pop.sel.size ? 'เลือกแล้ว <b>' + pop.sel.size + '</b> รายการ' : 'ยังไม่ได้เลือก';
+}
+
+function placePop() {
+  if (!pop) return;
+  const r = pop.anchor.getBoundingClientRect(), el = pop.el;
+  if (window.innerWidth <= 600) { el.style.maxHeight = ''; return; }   // มือถือ: แผ่นล่างจอ จัดด้วย CSS
+  const gap = 4, pad = 8;
+  const below = window.innerHeight - r.bottom - gap - pad;
+  const above = r.top - gap - pad;
+  const useBelow = below >= 300 || below >= above;      // พื้นที่ด้านล่างพอ หรือมากกว่าด้านบน
+  const room = Math.max(160, useBelow ? below : above);
+  el.style.maxHeight = Math.min(540, room) + 'px';
+  const w = el.offsetWidth, h = el.offsetHeight;
+  const left = Math.max(pad, Math.min(r.left, window.innerWidth - w - pad));
+  const top = useBelow ? r.bottom + gap : r.top - gap - h;
+  el.style.left = left + 'px';
+  el.style.top = Math.max(pad, top) + 'px';
+}
+
+/** apply = true บันทึกที่ติ๊กไว้ (ถ้ามีการเปลี่ยน), false = ยกเลิก */
+function closePop(apply, refocus) {
+  if (!pop) return;
+  const p = pop;
+  pop = null;
+  p.el.remove();
+  p.anchor.removeAttribute('aria-expanded');
+  const vals = p.opts.filter(o => p.sel.has(o[0])).map(o => o[0]);
+  if (apply && vals.join('\n') !== p.before) p.apply(vals);
+  if (refocus && p.anchor.isConnected) p.anchor.focus({ preventScroll: true });
+}
+
+function onPopChange(t) {
+  if (!pop || !t.matches('input[type=checkbox]')) return;
+  if (t.checked) { pop.sel.add(t.value); pop.keep.add(t.value); } else pop.sel.delete(t.value);   // ข้อที่ติ๊กออกยังค้างให้เห็น จะได้ติ๊กกลับได้
+  updatePopMeta();
+}
+
+function onPopClick(b) {
+  if (b.dataset.pop === 'clear') {
+    pop.sel.clear();
+    pop.only = false;
+    pop.el.querySelectorAll('input[type=checkbox]').forEach(i => { i.checked = false; });
+    updatePopMeta();
+  } else if (b.dataset.pop === 'only') {
+    pop.only = !pop.only;
+    updatePopMeta();
+  } else {
+    closePop(true, true);
+  }
+}
+
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (!t || !t.matches) return;
+  if (t.matches('.mpq')) { updatePopMeta(); return; }
+  if (t.matches('.ckq')) {
+    const q = t.value.trim().toLocaleLowerCase();
+    $$(t.dataset.for + ' .ckb').forEach(l => { l.hidden = !!q && l.textContent.toLocaleLowerCase().indexOf(q) < 0; });
+  }
+});
+window.addEventListener('scroll', () => placePop(), true);
+window.addEventListener('resize', () => placePop());
+
+/** ปุ่มตัวกรองประเภท / สาเหตุ ในสมุดคุมคำร้อง */
+function msLabel(arr, all, noun, name) {
+  if (!arr.length) return all;
+  const names = arr.map(name);
+  return names.length <= 2 ? names.join(', ') : noun + ' ' + names.length + ' รายการ';
+}
+
+function renderBookFilters() {
+  const bt = $('#bt'), br = $('#br');
+  if (!bt || !br) return;
+  const put = (el, arr, label) => {
+    el.innerHTML = '<span class="mst">' + esc(label) + '</span><span class="car" aria-hidden="true">▾</span>';
+    el.dataset.on = arr.length ? '1' : '';
+  };
+  put(bt, state.bt, msLabel(state.bt, 'ทุกประเภท', 'ประเภท', x => x));
+  put(br, state.br, msLabel(state.br, 'ทุกสาเหตุ', 'สาเหตุ', x => x === '__none' ? 'ยังไม่ระบุสาเหตุ' : x));
+}
+
+const THEAD = '<thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้ขอ</th><th>ที่อยู่ลูกค้า</th><th>ประเภทคำร้อง</th><th>เฟส · ขนาด</th><th>สายจดหน่วย</th><th>สถานะ</th><th>สาเหตุ</th></tr></thead>';
+
+function rowHtml(r) {
+  const size = r.size && r.size !== '-' ? ' · ' + esc(r.size) : '';
+  return '<tr data-row="' + esc(r.id) + '">'
+    + '<td>' + fmt(r.date) + '</td>'
+    + '<td>' + esc(r.no) + '</td>'
+    + '<td>' + esc(r.name) + '</td>'
+    + '<td class="addr">' + esc(r.address || '-') + '</td>'
+    + '<td>' + typeTags(r.type) + '</td>'
+    + '<td>' + esc(r.phase && r.phase !== '-' ? r.phase : '-') + size + '</td>'
+    + '<td>' + esc(r.route) + '</td>'
+    + '<td>' + statusCell(r) + '</td>'
+    + '<td class="why">' + reasonCell(r) + '</td></tr>';
+}
+
+function tableHtml(rows, emptyMsg, cls) {
+  return rows.length
+    ? '<div class="tablewrap' + (cls ? ' ' + cls : '') + '"><table>' + THEAD + '<tbody>' + rows.map(rowHtml).join('') + '</tbody></table></div>'
+    : '<div class="panel empty">' + emptyMsg + '</div>';
+}
+
+function pagerHtml(withRange) {
+  const range = withRange
+    ? 'แสดง ' + (state.total ? state.page * PAGE_SIZE + 1 : 0) + '–' + Math.min((state.page + 1) * PAGE_SIZE, state.total) + ' จาก ' + state.total.toLocaleString('th-TH') + ' · '
+    : '';
+  return '<span>' + range + 'หน้า ' + (state.page + 1) + ' / ' + state.pages + '</span>'
+    + '<button class="btn" type="button" data-pg="-1"' + (state.page === 0 ? ' disabled' : '') + '>ก่อนหน้า</button>'
+    + '<button class="btn" type="button" data-pg="1"' + (state.page >= state.pages - 1 ? ' disabled' : '') + '>ถัดไป</button>';
+}
+
+function updateYearSelector() {
+  const w = $('#yearWrap'), s = $('#selYear'), years = state.years || [];
+  if (!years.length || state.view === 'book') { w.hidden = true; return; }
+  w.hidden = false;
+  const sig = years.join(',') + '|' + state.year;
+  if (s.dataset.sig === sig) return;
+  s.dataset.sig = sig;
+  s.innerHTML = '<option value="">ทุกปี</option>' + years.slice().reverse().map(y => '<option value="' + y + '">' + (+y + 543) + '</option>').join('');
+  s.value = state.year;
+}
+
+/* =====================================================================
+   6. หน้าภาพรวม
+   ===================================================================== */
+function barsSvg(items, attr, label) {
+  const n = Math.max(items.length, 1);
+  const mx = Math.max(5, ...items.map(i => i.c));
+  const step = mx <= 10 ? 2 : mx <= 20 ? 5 : mx <= 50 ? 10 : mx <= 100 ? 20 : 100;
+  const top = Math.ceil(mx / step) * step;
+  const W = 760, H = 210, L = 40, R = 6, T = 14, B = 26, bw = (W - L - R) / n, ph = H - T - B;
+  let g = '';
+  for (let v = 0; v <= top; v += step) {
+    const y = H - B - v / top * ph;
+    g += '<line class="gl" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" text-anchor="end">' + v + '</text>';
+  }
+  items.forEach((it, i) => {
+    const x = L + i * bw, h = it.c / top * ph, w = Math.min(bw * .68, 56), bx = x + (bw - w) / 2;
+    g += '<g class="colx" ' + attr + '="' + esc(it.k) + '"><title>' + esc(it.title || it.label) + '</title>'
+      + '<rect class="hit" x="' + x + '" y="' + T + '" width="' + bw + '" height="' + (H - T - B) + '"/>';
+    if (it.c) {
+      g += '<rect class="b' + (it.cur ? ' td' : '') + '" x="' + bx + '" y="' + (H - B - h) + '" width="' + w + '" height="' + h + '" rx="2"/>'
+        + '<text class="cn" x="' + (x + bw / 2) + '" y="' + (H - B - h - 4) + '" text-anchor="middle">' + it.c + '</text>';
+    }
+    g += '<text x="' + (x + bw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(it.label) + '</text></g>';
+  });
+  return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(label) + '">' + g + '</svg>';
+}
+
+function barList(map, colorFn, total) {
+  const e = Object.entries(map || {}).sort((a, b) => b[1] - a[1]);
+  if (!e.length) return '<div class="empty">ไม่มีข้อมูล</div>';
+  const mx = Math.max(...e.map(x => x[1]));
+  return e.map(([k, v], i) => {
+    const c = colorFn(k, i);
+    return '<div class="bl"><span class="bl-n"><i class="dot" style="background:' + c + '"></i>' + esc(k) + '</span>'
+      + '<div class="bl-t"><i style="width:' + (v / mx * 100) + '%;background:' + c + '"></i></div>'
+      + '<span class="bl-v"><b>' + v + '</b> · ' + Math.round(v / Math.max(total, 1) * 100) + '%</span></div>';
+  }).join('');
+}
+
+function renderDashboard() {
+  const s = state.summary;
+  if (!s) return;
+  state.frame = 'dashboard';
+  const m = s.month, months = s.months || [], year = state.year, types = s.types || {};
+  const sumOf = o => Object.values(o || {}).reduce((a, b) => a + b, 0);
+
+  const monthOpts = months.slice().reverse()
+    .map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
+
+  const monthly = (year ? months : months.slice(-6)).slice().reverse().map(x => ({
+    k: x, label: pkey(x + '-01').toLocaleDateString('th-TH', { month: 'short' }),
+    c: s.byMonth[x] || 0, cur: x === m, title: fmtM(x) + ' · ' + (s.byMonth[x] || 0) + ' คำร้อง'
+  }));
+  const yearly = s.yearSummary.map(x => ({ k: x.key, label: String(+x.key + 543), c: x.total, title: 'ปี ' + (+x.key + 543) }));
+  const daysInMonth = new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate();
+  const daily = Array.from({ length: daysInMonth }, (_, i) => {
+    const k = m + '-' + pad(i + 1), c = s.byDay[k] || 0;
+    return { k, label: String(i + 1), c, cur: k === TODAY, title: fmt(k) + ' · ' + c + ' คำร้อง' };
+  });
+
+  const allTypes = [...new Set([...typeList(), ...Object.keys(types)])].filter(t => types[t] !== undefined);
+  const monthRows = (s.monthSummary || []).filter(x => year ? x.key.startsWith(year) : true);
+  const tbl = monthRows.slice(year ? 0 : -6).reverse().map(x =>
+    '<tr><td>' + fmtM(x.key) + '</td><td class="n"><b>' + x.total + '</b></td>'
+    + allTypes.map(t => '<td class="n">' + (x.types[t] || 0) + '</td>').join('')
+    + '<td class="n">' + x.open + '</td></tr>').join('');
+  const mcol = { 'ธรรมดา': 'var(--c2)', 'TOU': 'var(--c3)', 'EV': 'var(--c4)', '1P': 'var(--c1)', '3P': 'var(--c5)' };
+
+  $('#view').innerHTML =
+    '<div class="head"><div><h2>ภาพรวมคำร้อง ' + fmtM(m) + '</h2><div class="sub">'
+    + (year ? 'ปี พ.ศ. ' + (+year + 543) : 'ทุกปี') + ' · ' + s.total.toLocaleString('th-TH') + ' รายการ</div></div>'
+    + '<div class="sp"></div><div class="ctl"><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
+
+    + '<div class="kpis">'
+    + '<div class="kpi"><div class="l">คำร้องวันนี้</div><div class="v">' + s.today + '</div><div class="d">เมื่อวาน ' + s.yesterday + ' รายการ</div></div>'
+    + '<div class="kpi"><div class="l">คำร้องเดือนนี้</div><div class="v">' + s.monthTotal + '</div><div class="d">'
+    + (s.previousMonthTotal == null ? 'ยังไม่มีเดือนก่อนหน้า' : 'เดือนก่อน ' + s.previousMonthTotal + ' รายการ') + '</div></div>'
+    + '<div class="kpi open"><div class="l">รอผลตรวจ</div><div class="v">' + s.open + '</div><div class="d">ยังไม่ระบุผ่าน/ไม่ผ่าน</div></div>'
+    + '<div class="kpi"><div class="l">ตรวจแล้วเดือนนี้</div><div class="v">' + s.doneMonth + '</div><div class="d">'
+    + (s.monthTotal ? Math.round(s.doneMonth / s.monthTotal * 100) : 0) + '% ของคำร้องเดือนนี้</div></div>'
+    + '</div>'
+
+    + '<div class="panel mb"><h3>' + (year ? 'จำนวนคำร้องรายเดือน ปี ' + (+year + 543) : 'จำนวนคำร้องรายปี') + '</h3>'
+    + '<div class="hint">คลิกแท่งกราฟเพื่อเลือกปีหรือเดือน</div>'
+    + '<div class="scroll">' + barsSvg(year ? monthly : yearly, year ? 'data-month' : 'data-y', 'จำนวนคำร้อง') + '</div></div>'
+
+    + '<div class="panel mb"><h3>จำนวนคำร้องรายวัน</h3><div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div>'
+    + '<div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div></div>'
+
+    + '<div class="grid">'
+    + '<div class="panel"><h3>แยกตามประเภทคำร้อง</h3><div class="hint">เฉพาะ ' + fmtM(m) + ' · คำร้องที่มีหลายประเภทนับในทุกประเภทที่มี</div>'
+    + barList(types, k => TCOL[typeIdx(k)], s.monthTotal) + '</div>'
+    + '<div class="panel"><h3>เฟส</h3><div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>'
+    + barList(s.phases, k => mcol[k] || 'var(--c6)', sumOf(s.phases)) + '</div>'
+    + '</div>'
+
+    + '<div class="panel"><h3>สรุปรายเดือน</h3><div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div>'
+    + '<div class="scroll"><table><thead><tr><th>เดือน</th><th class="n">รวม</th>'
+    + allTypes.map(t => '<th class="n">' + esc(t) + '</th>').join('') + '<th class="n">ค้าง</th></tr></thead><tbody>' + tbl + '</tbody></table></div></div>';
+}
+
+/* =====================================================================
+   7. หน้าคำร้องทั้งหมด / หน้ารายวัน
+      โครงหน้า (ช่องค้นหา ตัวกรอง) สร้างครั้งเดียวต่อหน้า
+      เวลาข้อมูลเปลี่ยน วาดใหม่เฉพาะตารางกับตัวเลขหน้า ช่องค้นหาจึงไม่หาย
+   ===================================================================== */
+function buildFrame() {
+  const view = state.view;
+  state.frame = view;
+  state.rows = []; state.total = 0; state.pages = 1; state.page = 0;
+  sigs.delete(view);
+  $$('nav a').forEach(a => {
+    if (a.dataset.v === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+
+  if (view === 'dashboard') {
+    if (state.summary) renderDashboard();
+    else $('#view').innerHTML = '<div class="panel empty">กำลังโหลดภาพรวม…</div>';
+    return;
+  }
+
+  if (view === 'all') {
+    $('#view').innerHTML =
+      '<div class="head"><div><h2>คำร้องทั้งหมด</h2><div class="sub" id="allSub"></div></div></div>'
+      + '<div class="ctl mb">'
+      + '<input type="search" id="fq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.q) + '" style="min-width:230px">'
+      + '<select id="fm"></select><select id="ft"></select>'
+      + '<select id="fs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
+      + '</div>'
+      + '<div id="tbl"><div class="panel empty">กำลังโหลดคำร้อง…</div></div><div class="pager" id="pager"></div>';
+    $('#fs').value = state.fs;
+    fillFilters();
+    return;
+  }
+
+  if (view === 'book') {
+    $('#yearWrap').hidden = true;
+    $('#view').innerHTML =
+      '<div class="head"><div><h2>สมุดคุมคำร้องใช้ไฟ</h2><div class="sub" id="bkSub">กำลังโหลด…</div></div></div>'
+      + '<div class="bk-years" id="bkYears" role="group" aria-label="เลือกปี พ.ศ."></div>'
+      + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
+      + '<div class="ctl mb">'
+      + '<input type="search" id="bq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
+      + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
+      + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
+      + '<select id="bs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
+      + '</div>'
+      + '<div class="bk-hint">คลิกแถวเพื่อดูรายละเอียดและจัดการคำร้อง</div>'
+      + '<div id="tbl"><div class="panel empty">กำลังโหลดคำร้อง…</div></div><div class="pager" id="pager"></div>';
+    $('#bs').value = state.bs;
+    renderBookFilters();
+    return;
+  }
+
+  $('#view').innerHTML =
+    '<div class="head"><div><h2 id="dTitle"></h2><div class="sub" id="dSub"></div></div><div class="sp"></div>'
+    + '<div class="ctl"><button class="btn" type="button" data-act="prev">‹</button>'
+    + '<label class="sub" for="pickDay">เลือกวัน</label><input type="date" id="pickDay" value="' + state.day + '">'
+    + '<button class="btn" type="button" data-act="next">›</button><button class="btn" type="button" data-act="today">วันนี้</button></div></div>'
+    + '<div class="chips" id="dChips"></div>'
+    + '<div class="ctl mb"><input type="search" id="dq" placeholder="ค้นหารายชื่อ ที่อยู่ เบอร์โทร ในวันนี้" value="' + esc(state.dq) + '" style="min-width:280px"></div>'
+    + '<div id="tbl"><div class="panel empty">กำลังโหลดคำร้อง…</div></div><div class="pager" id="pager"></div>';
+  renderDailyHead();
+}
+
+function fillFilters() {
+  setOptions($('#fm'), [['', 'ทุกเดือน'], ...state.months.slice().reverse().map(m => [m, fmtM(m)])], state.fm);
+  setOptions($('#ft'), [['', 'ทุกประเภท'], ...(state.types.length ? state.types : TYPES).map(t => [t, t])], state.ft);
+}
+
+function renderDailyHead() {
+  $('#dTitle').textContent = 'คำร้องวันที่ ' + fmt(state.day, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const p = $('#pickDay');
+  if (p.value !== state.day) p.value = state.day;
+}
+
+function renderDailyMeta() {
+  $('#dSub').textContent = state.total + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ';
+  $('#dChips').innerHTML = Object.entries(state.typeCounts).sort((a, b) => b[1] - a[1])
+    .map(([k, v]) => '<div class="chip"><i class="dot" style="background:' + TCOL[typeIdx(k)] + '"></i>' + esc(k) + '<b>' + v + '</b></div>').join('');
+}
+
+/** ส่วนบนของสมุดคุมคำร้อง: ปุ่มปี + ปุ่มเดือน + หัวเรื่อง (ไม่แตะช่องค้นหาและตาราง) */
+function renderBookTop() {
+  if (state.frame !== 'book' || !$('#bkMonths')) return;
+  const y = state.by, m = state.bm, ms = state.bookMonths || [];
+  const byKey = {};
+  ms.forEach(x => { byKey[x.key] = x; });
+  const isAll = y === 'all';
+  $('#bkYears').innerHTML = (state.years || []).map(yy =>
+    '<button class="ychip" type="button" data-by="' + yy + '" aria-pressed="' + (yy === y) + '">' + (+yy + 543) + '</button>').join('')
+    + '<button class="ychip" type="button" data-by="all" aria-pressed="' + isAll + '">ทุกปี</button>'
+    + (isAll ? '' : '<span class="bk-legend">ตัวเลข = จำนวนคำร้อง · สีส้ม = รอผลตรวจ · ✓ = ตรวจครบ</span>');
+  $('#bkMonths').hidden = isAll;
+
+  const tile = (key, label, t, o, all, full) =>
+    '<button class="mtile' + (all ? ' all' : '') + (t ? '' : ' zero') + '" type="button" data-bm="' + key + '" aria-pressed="' + (key === m) + '"'
+    + ' title="' + full + ' · ' + (t ? t.toLocaleString('th-TH') + ' รายการ' + (o ? ' · รอผลตรวจ ' + o : ' · ตรวจครบ') : 'ไม่มีคำร้อง') + '">'
+    + '<span class="m">' + label + '</span><span class="c">' + (t ? t.toLocaleString('th-TH') : '–') + '</span>'
+    + '<span class="o' + (t && !o ? ' ok' : '') + '">' + (t ? (o ? 'รอ ' + o : '✓') : '') + '</span>'
+    + '</button>';
+  let tiles = '';
+  if (y && !isAll) {
+    tiles = tile('', 'ทั้งปี', ms.reduce((a, x) => a + x.total, 0), ms.reduce((a, x) => a + x.open, 0), true, 'ทั้งปี ' + (+y + 543));
+    for (let i = 1; i <= 12; i++) {
+      const key = y + '-' + pad(i), x = byKey[key], d = new Date(2000, i - 1, 1);
+      tiles += tile(key, d.toLocaleDateString('th-TH', { month: 'short' }), x ? x.total : 0, x ? x.open : 0, false,
+        d.toLocaleDateString('th-TH', { month: 'long' }) + ' ' + (+y + 543));
+    }
+  }
+  $('#bkMonths').innerHTML = tiles;
+  $('#bkSub').textContent = isAll
+    ? 'ทุกปี · ค้นหาได้ข้ามทุกปี · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    : y
+    ? 'ปี พ.ศ. ' + (+y + 543) + ' · ' + (m ? fmtM(m) : 'ทั้งปี') + ' · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    : 'ยังไม่มีข้อมูลคำร้อง';
+}
+
+function renderBook() {
+  if (state.frame !== 'book' || !$('#tbl')) return;
+  renderBookTop();
+  renderBookFilters();
+  $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่พบคำร้องในช่วงที่เลือก', 'fit');
+  $('#pager').innerHTML = pagerHtml(true);
+}
+
+/** วาดเฉพาะส่วนที่เปลี่ยน (ไม่แตะช่องค้นหา/ตัวกรอง) */
+function renderList() {
+  if (state.frame !== state.view || !$('#tbl')) return;
+  if (state.view === 'book') { renderBook(); return; }
+  if (state.view === 'all') {
+    $('#allSub').textContent = 'พบ ' + state.total.toLocaleString('th-TH') + ' รายการ' + (state.year ? ' ของปี ' + (+state.year + 543) : '');
+    fillFilters();
+    $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่พบรายการที่ตรงกับตัวกรอง');
+    $('#pager').innerHTML = pagerHtml(true);
+  } else {
+    renderDailyMeta();
+    $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่มีคำร้องในวันที่เลือก');
+    $('#pager').innerHTML = pagerHtml(false);
+  }
+}
+
+/* =====================================================================
+   8. รายละเอียดคำร้อง (ลิ้นชักด้านขวา)
+   ===================================================================== */
+function closeDrawer() {
+  $('#dwrap').hidden = true;
+  state.detail = null;
+  state.detailData = null;
+}
+
+async function openDetail(id) {
+  state.detail = id;
+  const row = state.rows.find(r => r.id === id);
+  state.detailData = row || null;
+  $('#dwrap').hidden = false;
+  if (row) renderDrawer(true);       // แสดงข้อมูลจากตารางก่อน แล้วค่อยโหลดประวัติ
+  else $('#drawer').innerHTML = '<div class="empty">กำลังโหลดรายละเอียดและประวัติ…</div>';
+  await loadDetail(id);
+}
+
+async function loadDetail(id) {
+  try {
+    const r = await call('getRequest', [id, rnOf(id)], true);
+    if (state.detail !== id) return;
+    state.detailData = r;
+    renderDrawer(false);
+  } catch (e) {
+    if (state.detail === id) $('#drawer').innerHTML = '<div class="empty">' + esc(errMsg(e)) + '</div>';
+  }
+}
+
+function copyText(t) {
+  const done = () => toast('คัดลอกแล้ว');
+  const fb = () => {
+    const a = document.createElement('textarea');
+    a.value = t; a.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(a); a.select();
+    try { document.execCommand('copy'); done(); } catch (e) { toast('คัดลอกไม่สำเร็จ'); }
+    a.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fb); else fb();
+}
+
+function renderDrawer(historyLoading) {
+  const r = state.detailData;
+  if (!r) return;
+  const has = v => v != null && String(v).trim() !== '' && String(v).trim() !== '-';
+  const cp = t => '<button class="cp" type="button" data-copy="' + esc(t) + '" title="คัดลอก">คัดลอก</button>';
+  const kv = (k, v, extra) => '<div class="kv"><dt>' + k + '</dt><dd>' + (has(v) ? esc(v) : '-') + (has(v) && extra ? extra : '') + '</dd></div>';
+  const hidden = [];
+  const opt = (k, v) => { if (has(v)) return kv(k, v); hidden.push(k); return ''; };   // ช่องว่างไม่แสดง รวมเป็นบรรทัดเดียวท้ายรายการ
+  const digits = String(r.phone || '').replace(/\D/g, '');
+  const phoneVal = has(r.phone)
+    ? ((/^[\d\s\-]+$/.test(r.phone) && digits.length >= 9 && digits.length <= 10) ? '<a href="tel:' + digits + '" target="_top">' + esc(r.phone) + '</a>' : esc(r.phone)) + cp(r.phone)
+    : '-';
+  const types = splitMulti(r.type);
+  const typeHtml = types.length ? '<div class="chs">' + types.map(x => '<span class="chp">' + esc(x) + '</span>').join('') + '</div>' : '-';
+  const detail = '<div class="kv"><dt>ประเภทคำร้อง</dt><dd>' + typeHtml + '</dd></div>'
+    + kv('เฟส · ขนาด', (r.phase || '-') + (r.size && r.size !== '-' ? ' · ' + r.size : ''))
+    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole) + opt('สายจดหน่วย', r.route) + opt('หมายเหตุ', r.note)
+    + kv('แหล่งข้อมูล', r.src);
+  $('#drawer').innerHTML =
+    '<div class="dhead"><div class="dh"><div style="flex:1;min-width:0"><h3>' + esc(r.name || '(ไม่ระบุชื่อ)') + '</h3>'
+    + '<div class="dmeta"><span class="dno">' + esc(r.no || '-') + '</span>' + (r.no ? cp(r.no) : '') + '<span>รับเมื่อ ' + fmt(r.date) + '</span></div></div>'
+    + '<button class="dx" type="button" data-close="1" aria-label="ปิด">✕</button></div></div>'
+    + '<div class="dbody">'
+    + '<div class="dsec">สถานะ</div>' + statusCell(r, true)
+    + ((r.reason || state.canWrite) ? '<div class="dsec">สาเหตุ</div><div style="white-space:pre-wrap;font-size:14px">' + reasonCell(r, true) + '</div>' : '')
+    + '<div class="dsec">ข้อมูลลูกค้า</div><dl style="margin:0">'
+    + kv('ชื่อผู้ขอ', r.name)
+    + kv('ที่อยู่', r.address, cp(r.address))
+    + '<div class="kv"><dt>เบอร์โทร</dt><dd>' + phoneVal + '</dd></div></dl>'
+    + '<div class="dsec">รายละเอียดงาน</div><dl style="margin:0">' + detail + '</dl>'
+    + (hidden.length ? '<div class="dnone">ยังไม่มีข้อมูล: ' + hidden.join(', ') + '</div>' : '')
+    + '</div>'
+    + (state.canWrite
+      ? '<div class="dact"><button class="btn pri" type="button" data-edit="' + esc(r.id) + '">แก้ไขข้อมูล</button><span class="sp"></span>'
+        + (state.canDelete ? '<button class="lnk bad" type="button" data-del="' + esc(r.id) + '">ลบคำร้อง</button>' : '') + '</div>'
+      : '');
+}
+
+/* =====================================================================
+   9. เปลี่ยนสถานะ (อัปเดตหน้าจอทันที บันทึกเบื้องหลัง ไม่มีแถบโหลด)
+   ===================================================================== */
+const statusQueues = new Map();   // id -> promise ต่อคิว บันทึกตามลำดับที่กด
+
+function enqueue(id, task) {
+  const p = (statusQueues.get(id) || Promise.resolve()).then(task, task);
+  statusQueues.set(id, p);
+  p.then(() => { if (statusQueues.get(id) === p) statusQueues.delete(id); });
+  return p;
+}
+
+function currentStatus(id) {
+  const row = state.rows.find(r => r.id === id);
+  if (row) return row.status;
+  return state.detailData && state.detailData.id === id ? state.detailData.status : '';
+}
+
+/** ตั้งสถานะในข้อมูลบนหน้าจอ + ตัวเลข "ค้างดำเนินการ" + สีของปุ่ม */
+function setRowStatus(id, v) {
+  const row = state.rows.find(r => r.id === id);
+  if (row) {
+    if (state.view === 'daily' && isDone(row) !== isDone({ status: v })) state.openCount += isDone({ status: v }) ? -1 : 1;
+    if (state.view === 'book' && isDone(row) !== isDone({ status: v })) {
+      const d = isDone({ status: v }) ? -1 : 1, x = (state.bookMonths || []).find(z => z.key === String(row.date).slice(0, 7));
+      if (x) x.open += d;
+      state.openCount += d;
+    }
+    row.status = v;
+  }
+  if (state.detailData && state.detailData.id === id) state.detailData.status = v;
+  $$('select[data-st]').forEach(s => {
+    if (s.dataset.st !== id) return;
+    s.value = v;
+    s.className = 'st ' + statusCls(v) + (s.classList.contains('big') ? ' big' : '');
+  });
+  if (state.view === 'daily' && $('#dSub')) renderDailyMeta();
+  if (state.view === 'book') renderBookTop();
+}
+
+/** เลขแถวในชีตของรายการนี้ (ตัวช่วยให้เซิร์ฟเวอร์หาแถวเร็ว) */
+function rnOf(id) {
+  const row = state.rows.find(r => r.id === id);
+  return row && row.rn ? row.rn : (state.detailData && state.detailData.id === id && state.detailData.rn) || 0;
+}
+/** เซิร์ฟเวอร์บอกเลขรุ่นข้อมูลหลังบันทึก ถ้าไม่มีใครแก้แทรกมา ถือว่าเรารู้รุ่นล่าสุดแล้ว ไม่ต้องโหลดรายการซ้ำ */
+function noteVer(res) {
+  if (res && res.ver && lastVer !== null && lastVer === res.prevVer) lastVer = res.ver;
+}
+
+function currentReason(id) {
+  const row = state.rows.find(r => r.id === id);
+  if (row) return row.reason || '';
+  return state.detailData && state.detailData.id === id ? state.detailData.reason || '' : '';
+}
+
+function setRowReason(id, v) {
+  const row = state.rows.find(r => r.id === id);
+  if (row) row.reason = v;
+  if (state.detailData && state.detailData.id === id) state.detailData.reason = v;
+  const arr = splitMulti(v);
+  $$('button[data-ms="reason"]').forEach(b => { if (b.dataset.id === id) { b.innerHTML = msInner(arr, '— ยังไม่ระบุ —', b.classList.contains('big')); b.title = reasonTip(arr); b.style.setProperty('--lv', lvVar(worstLv(arr))); } });
+}
+
+/** บันทึกสาเหตุ (หลายรายการ) อัปเดตหน้าจอทันที แล้วบันทึกเบื้องหลัง */
+function saveReason(id, arr) {
+  const next = arr.join(', '), prev = currentReason(id);
+  if (next === splitMulti(prev).join(', ')) return;
+  setRowReason(id, next);
+  sigs.delete(state.view);
+  enqueue(id, async () => {
+    try {
+      const res = await call('updateRequest', [id, { reason: next }, rnOf(id)], true);
+      noteVer(res);
+      memo.clear();
+      toast('อัปเดตสาเหตุแล้ว');
+      if (state.detail === id) renderDrawer(false);
+    } catch (e) {
+      console.error(e);
+      if (currentReason(id) === next) setRowReason(id, prev);
+      toast('บันทึกสาเหตุไม่สำเร็จ');
+    }
+  });
+}
+
+function onStatusChange(el) {
+  const id = el.dataset.st, next = el.value, prev = currentStatus(id);
+  el.blur();   // ปล่อยโฟกัสเพื่อไม่ให้ระบบเช็กข้อมูลใหม่ค้างอยู่
+  setRowStatus(id, next);
+  sigs.delete(state.view);
+  enqueue(id, async () => {
+    try {
+      const res = await call('updateRequest', [id, { status: next }, rnOf(id)], true);
+      noteVer(res);
+      memo.clear();
+      toast('อัปเดตสถานะแล้ว');
+      if (next === 'ไม่ผ่าน') {   // เลือกไม่ผ่านจากตาราง → เปิดฟอร์มให้พิมพ์สาเหตุต่อทันที (ถ้ายังไม่มี)
+        const row = state.rows.find(r => r.id === id);
+        if (!row || !row.reason) setTimeout(() => openForm(id, 'reason'), 0);
+      }
+      if (state.detail === id) renderDrawer(false);
+    } catch (e) {
+      console.error(e);
+      if (currentStatus(id) === next) setRowStatus(id, prev);
+      toast('บันทึกสถานะไม่สำเร็จ');
+    }
+  });
+}
+
+/* =====================================================================
+   10. เพิ่ม / แก้ไข / ลบ
+   ===================================================================== */
+let formBase = '', closeArmed = 0;
+const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_status', '#f_phase', '#f_size', '#f_in', '#f_pole', '#f_route', '#f_note'];
+function formSnap() { return JSON.stringify(FORM_FIELDS.map(k => $(k).value)); }
+
+/** ปิดฟอร์ม: ถ้ามีข้อมูลที่ยังไม่บันทึก ต้องกดปิดซ้ำภายใน 4 วินาทีเพื่อทิ้ง */
+function closeForm(force) {
+  if (!force && formSnap() !== formBase && Date.now() - closeArmed > 4000) {
+    closeArmed = Date.now();
+    $('#mErr').textContent = 'มีข้อมูลที่ยังไม่บันทึก — กดปิดอีกครั้งเพื่อทิ้งการแก้ไข';
+    return;
+  }
+  closeArmed = 0;
+  $('#modal').hidden = true;
+}
+
+async function openForm(id, focus) {
+  if (!state.canWrite) { toast('บัญชีนี้ดูข้อมูลได้อย่างเดียว'); return; }
+  let r = null;
+  if (id) {
+    try { r = await call('getRequest', [id, rnOf(id)]); }
+    catch (e) { toast(errMsg(e)); return; }
+  }
+  editing = r ? r.id : null;
+  $('#mTitle').textContent = r ? 'แก้ไขคำร้อง' + (r.no ? ' ' + r.no : '') : 'เพิ่มคำร้อง';
+  document.querySelectorAll('#form .invalid').forEach(x => x.classList.remove('invalid'));
+  closeArmed = 0;
+  $('#mErr').textContent = '';
+  $('#f_date').value = r ? r.date : (state.view === 'daily' ? state.day : TODAY);
+  $('#f_no').value = r ? r.no : '';
+  $('#f_name').value = r ? r.name : '';
+  $('#f_addr').value = r ? r.address || '' : '';
+  $('#f_phone').value = r ? r.phone || '' : '';
+  fillSel('#f_type', ['', ...typeList()], r ? r.type : '');
+  fillSel('#f_status', ['', ...STATUS], r && r.status);
+  fillSel('#f_phase', ['1P', '3P', '-'], r && r.phase);
+  fillSel('#f_in', ['-', 'A', 'B', 'C'], (r && r.inPhase) || '-');
+  fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
+  $('#f_size').value = r && r.size && r.size !== '-' ? r.size : '';
+  $('#f_route').value = r ? r.route || '' : '';
+  $('#f_note').value = r ? r.note || '' : '';
+  formBase = formSnap();
+  $('#modal').hidden = false;
+  (focus === 'reason' && r ? $('#f_note') : $('#f_date')).focus();
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  const date = $('#f_date').value;
+  document.querySelectorAll('#form .invalid').forEach(x => x.classList.remove('invalid'));
+  const miss = [];
+  if (!date) miss.push(['#f_date', 'กรอกวันที่รับคำร้อง']);
+  if (!$('#f_no').value.trim()) miss.push(['#f_no', 'กรอกเลขที่คำร้อง']);
+  if (!$('#f_type').value) miss.push(['#f_type', 'เลือกประเภทคำร้อง']);
+  if (miss.length) {
+    miss.forEach(m => $(m[0]).classList.add('invalid'));
+    $(miss[0][0]).focus();
+    $('#mErr').textContent = miss.map(m => m[1]).join(' และ ');
+    return;
+  }
+  const d = {
+    date,
+    no: $('#f_no').value.trim(),            // สำนักงานกรอกเอง (ระบบไม่สร้างให้ และเลขที่ต้องไม่ซ้ำ)
+    name: $('#f_name').value.trim(),
+    address: $('#f_addr').value.trim(),
+    phone: $('#f_phone').value.trim(),
+    type: $('#f_type').value,
+    status: $('#f_status').value,
+    phase: $('#f_phase').value,
+    size: $('#f_size').value.trim() || '-',
+    inPhase: $('#f_in').value,
+    pole: $('#f_pole').value,
+    route: $('#f_route').value.trim(),
+    note: $('#f_note').value.trim()
+  };
+  const btn = $('#mSave'), wasEditing = !!editing;
+  btn.disabled = true;
+  btn.textContent = 'กำลังบันทึก…';
+  $('#mErr').textContent = '';
+  try {
+    if (wasEditing) {
+      if (!d.no) delete d.no;               // ไม่ล้างเลขที่เดิมโดยไม่ตั้งใจ
+      const res = await call('updateRequest', [editing, d, rnOf(editing)]);
+      noteVer(res);
+      if (res && res.id && state.detail === editing) state.detail = res.id;   // เลขที่คำร้องเปลี่ยน = รหัสอ้างอิงเปลี่ยนตาม
+    } else {
+      d.src = 'บันทึกในเว็บ';
+      noteVer(await call('createRequest', [d]));
+    }
+    closeForm(true);
+    toast(wasEditing ? 'บันทึกการแก้ไขแล้ว' : 'เพิ่มคำร้องแล้ว');
+    reloadAfterChange();
+    if (state.detail) loadDetail(state.detail);
+  } catch (err) {
+    $('#mErr').textContent = errMsg(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'บันทึก';
+  }
+}
+
+function confirmDelete(btn) {
+  if (btn.dataset.sure !== '1') {
+    const label = btn.textContent;
+    btn.dataset.sure = '1';
+    btn.textContent = 'ยืนยันลบ';
+    btn.classList.add('sure');
+    setTimeout(() => {
+      if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = label; btn.classList.remove('sure'); }
+    }, 4000);
+    return;
+  }
+  deleteRequest(btn.dataset.del, btn);
+}
+
+/** ลบออกจากหน้าจอทันที ถ้าบันทึกไม่สำเร็จจะใส่กลับ */
+async function deleteRequest(id, btn) {
+  const idx = state.rows.findIndex(r => r.id === id);
+  const removed = idx >= 0 ? state.rows[idx] : null;
+  btn.disabled = true;
+  if (removed) {
+    state.rows.splice(idx, 1);
+    state.total = Math.max(0, state.total - 1);
+    if (state.view === 'daily' && !isDone(removed)) state.openCount = Math.max(0, state.openCount - 1);
+    renderList();
+  }
+  closeDrawer();
+  try {
+    await call('deleteRequest', [id]);
+    toast('ลบคำร้องแล้ว');
+    reloadAfterChange();
+  } catch (e) {
+    toast(errMsg(e));
+    if (removed) {
+      state.rows.splice(idx, 0, removed);
+      state.total += 1;
+      if (state.view === 'daily' && !isDone(removed)) state.openCount += 1;
+      renderList();
+    }
+  }
+}
+
+/* =====================================================================
+   11. ตัวจัดการเหตุการณ์ (ผูกครั้งเดียวที่ document ไม่ผูกซ้ำทุกครั้งที่วาดตาราง)
+   ===================================================================== */
+function shiftDay(n) {
+  const d = pkey(state.day);
+  d.setDate(d.getDate() + n);
+  setDay(dkey(d));
+}
+
+function setDay(k) {
+  state.day = k;
+  state.page = 0;
+  renderDailyHead();
+  loadView();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  let el;
+  const msEl = t.closest('[data-ms]');
+  if (pop) {
+    const pb = t.closest('#mpop [data-pop]');
+    if (pb) { onPopClick(pb); return; }
+    if (t.closest('#mpop')) return;
+    const same = msEl && msEl === pop.anchor;   // คลิกปุ่มเดิมซ้ำ = ปิด
+    closePop(true);                              // คลิกที่อื่น = ยืนยันที่ติ๊กไว้
+    if (same) return;
+  }
+  if (msEl) { openMs(msEl); return; }
+  if ((el = t.closest('[data-retry]'))) { loadView({ force: true }); return; }
+  if ((el = t.closest('[data-copy]'))) { copyText(el.dataset.copy); return; }
+  if ((el = t.closest('[data-edit]'))) { openForm(el.dataset.edit); return; }
+  if ((el = t.closest('[data-del]'))) { confirmDelete(el); return; }
+  if ((el = t.closest('[data-pg]'))) {
+    if (!el.disabled) { state.page = Math.max(0, state.page + Number(el.dataset.pg)); loadView(); }
+    return;
+  }
+  if ((el = t.closest('[data-act]'))) {
+    const a = el.dataset.act;
+    if (a === 'prev') shiftDay(-1); else if (a === 'next') shiftDay(1); else setDay(TODAY);
+    return;
+  }
+  if ((el = t.closest('[data-by]'))) { state.by = el.dataset.by; state.bm = 'auto'; state.page = 0; loadView(); return; }
+  if ((el = t.closest('[data-bm]'))) { state.bm = el.dataset.bm; state.page = 0; loadView(); return; }
+  if ((el = t.closest('[data-month]'))) { state.month = el.dataset.month; loadView(); return; }
+  if ((el = t.closest('[data-y]'))) { state.year = el.dataset.y; state.month = ''; loadView(); return; }
+  if ((el = t.closest('[data-day]'))) { state.day = el.dataset.day; location.hash = 'daily'; return; }
+  if (t.closest('.dback, [data-close]')) { closeDrawer(); return; }
+  if ((el = t.closest('[data-row]')) && !t.closest('button, select, input, a')) openDetail(el.dataset.row);
+});
+
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.matches('select[data-st]')) { onStatusChange(t); return; }
+  if (t.closest('#mpop')) { onPopChange(t); return; }
+  switch (t.id) {
+    case 'selMonth': state.month = t.value; loadView(); break;
+    case 'selYear':  state.year = t.value; state.fm = ''; state.page = 0; loadView(); break;
+    case 'fm': state.fm = t.value; state.page = 0; loadView(); break;
+    case 'ft': state.ft = t.value; state.page = 0; loadView(); break;
+    case 'fs': state.fs = t.value; state.page = 0; loadView(); break;
+    case 'bs': state.bs = t.value; state.page = 0; loadView(); break;
+    case 'pickDay': if (t.value) setDay(t.value); break;
+  }
+});
+
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (id === 'fq') state.q = e.target.value;
+  else if (id === 'dq') state.dq = e.target.value;
+  else if (id === 'bq') state.bq = e.target.value;
+  else return;
+  state.page = 0;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { searchTimer = null; loadView(); }, SEARCH_DELAY);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches && e.target.matches('.card[data-row]')) { openDetail(e.target.dataset.row); return; }
+  if (e.key !== 'Escape') return;
+  if (pop) { closePop(false, true); return; }
+  if (!$('#modal').hidden) closeForm(); else closeDrawer();
+});
+
+$('#form').addEventListener('submit', submitForm);
+$('#btnAdd').addEventListener('click', () => openForm(null));
+$('#mCancel').addEventListener('click', () => closeForm());
+$('#mClose').addEventListener('click', () => closeForm());
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeForm(); });
+$('#form').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('#mSave').click(); } });
+['input', 'change'].forEach(ev => $('#form').addEventListener(ev, e => {
+  if (e.target.classList) e.target.classList.remove('invalid');
+}));
+
+$('#btnRefresh').addEventListener('click', async () => {
+  const b = $('#btnRefresh');
+  b.disabled = true;
+  try {
+    await call('refreshData', []);       // เติม ID ให้แถวที่พิมพ์เองในชีต + ล้างแคชฝั่งเซิร์ฟเวอร์
+    await reloadAfterChange();
+    toast('โหลดข้อมูลล่าสุดแล้ว');
+  } catch (err) { toast(errMsg(err)); }
+  finally { b.disabled = false; }
+});
+
+/* โหลดข้อมูลล่าสุดเงียบ ๆ เป็นระยะ เพื่อให้เห็นงานที่เจ้าหน้าที่คนอื่นเพิ่ม/แก้ (ข้ามถ้ากำลังกรอกฟอร์มหรือเลือกรายการอยู่) */
+function canAutoRefresh() {
+  const a = document.activeElement;
+  return authed && started && !document.hidden && !busy && !statusQueues.size && !searchTimer
+    && $('#modal').hidden && !pop && !(a && a.tagName === 'SELECT');
+}
+setInterval(() => { if (canAutoRefresh()) { loadOptions(); loadView({ silent: true, force: true }); } }, AUTO_REFRESH_MS);
+
+/* ถามเซิร์ฟเวอร์เป็นระยะว่าข้อมูลเปลี่ยนไหม (เช่น มีคนพิมพ์ในชีต) ถ้าเปลี่ยนก็โหลดรายการใหม่ทันที */
+let lastVer = null, polling = false;
+async function pollVersion() {
+  if (polling || !canAutoRefresh()) return;
+  polling = true;
+  try {
+    const v = await gas('getVersion');
+    if (lastVer === null) lastVer = v;
+    else if (v !== lastVer) { lastVer = v; memo.clear(); await loadView({ silent: true, force: true }); }
+  } catch (e) { /* เงียบไว้ ลองใหม่รอบหน้า */ }
+  finally { polling = false; }
+}
+let lastActive = Date.now();
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true }));
+(function schedulePoll() {
+  const idle = Date.now() - lastActive > 300000;
+  setTimeout(async () => { await pollVersion(); schedulePoll(); }, idle ? POLL_IDLE_MS : POLL_MS);
+})();
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return;
+  pollVersion();   // กลับมาที่แท็บนี้ → เช็กทันที ไม่ต้องรอรอบถัดไป
+  if (canAutoRefresh() && Date.now() - lastLoad > 30000) loadView({ silent: true, force: true });
+});
+window.addEventListener('focus', () => { lastActive = Date.now(); pollVersion(); });
+
+/* =====================================================================
+   12. เข้าสู่ระบบ / เปลี่ยนหน้า / เริ่มทำงาน
+   ===================================================================== */
+function route() {
+  let h = location.hash.replace('#', '');
+  if (h === 'all') { h = 'book'; state.by = 'all'; }   // ลิงก์เดิมของ "คำร้องทั้งหมด" ไปที่สมุดแบบทุกปี
+  state.view = ['dashboard', 'daily', 'book'].includes(h) ? h : 'dashboard';
+  buildFrame();
+  loadView();
+}
+window.addEventListener('hashchange', () => { if (authed && started) route(); });
+
+function showGate() {
+  $('#login').hidden = authed;
+  $('.shell').hidden = !authed;
+}
+
+const ROLE_TH = { admin: 'ผู้ดูแลระบบ', editor: 'เจ้าหน้าที่ (แก้ไขได้)', viewer: 'ดูข้อมูลอย่างเดียว' };
+
+function showDenied(msg) {
+  authed = false;
+  $('#gateMsg').textContent = msg;
+  $('#btnRetry').hidden = false;
+  showGate();
+}
+
+/** ถามเซิร์ฟเวอร์ว่าผู้ใช้คือใครและมีสิทธิ์อะไร (การป้องกันจริงอยู่ที่เซิร์ฟเวอร์ ปุ่มที่ซ่อนเป็นแค่ความสะดวก) */
+async function checkAccess() {
+  $('#btnRetry').hidden = true;
+  if (!tokenOk()) {
+    try { const s = sessionStorage.getItem('idt'), p = s && parseJwt(s); if (p && p.exp * 1000 - Date.now() > 60000) { idToken = s; tokenExp = p.exp * 1000; } } catch (e) { /* ไม่เป็นไร */ }
+  }
+  if (!tokenOk()) { renderLoginButton(); return; }
+  $('#gWrap').hidden = true;
+  $('#gateMsg').textContent = 'กำลังตรวจสอบสิทธิ์ผู้ใช้…';
+  try {
+    const me = await gas('getMe');
+    state.me = me;
+    state.canWrite = !!me.canWrite;
+    state.canDelete = !!me.canDelete;
+    ['s'].forEach(k => {
+      $('#' + k + 'Name').textContent = me.name || me.email;
+      $('#' + k + 'Role').textContent = ROLE_TH[me.role] || me.role;
+      $('#' + k + 'Av').hidden = true;
+      $('#' + k + 'Who').hidden = false;
+    });
+    await loadOptions();
+    authed = true;
+    showGate();
+    if (!started) { started = true; route(); }
+  } catch (e) {
+    if (e && e.message === NEED_LOGIN) { idToken = ''; renderLoginButton(); return; }
+    showDenied(errMsg(e));
+  }
+}
+$('#btnRetry').addEventListener('click', checkAccess);
+
+showGate();
+initGoogle();
+checkAccess();
+</script>
+</body>
+</html>
