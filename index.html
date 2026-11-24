@@ -748,7 +748,7 @@ const state = {
   q: '', dq: '', ft: '', fs: '', fm: '', page: 0,   // ค้นหา + ตัวกรองของหน้ารายการ
   rows: [], total: 0, pages: 1, openCount: 0, typeCounts: {}, types: [], reasons: [], typeOpts: [], reasonOpts: [], months: [], years: [],
   summary: null, detail: null, detailData: null, frame: '',
-  by: '', bm: 'auto', bq: '', bt: [], br: [], bs: '', bookMonths: []   // สมุดคุมคำร้อง: ปี / เดือน / ค้นหา / ประเภท(หลายค่า) / สาเหตุ(หลายค่า) / สถานะ
+  by: '', bm: 'auto', bd: '', bq: '', bt: [], br: [], bs: '', bookMonths: []   // สมุดคุมคำร้อง: ปี / เดือน / ค้นหา / ประเภท(หลายค่า) / สาเหตุ(หลายค่า) / สถานะ
 };
 let editing = null;
 let authed = false, started = false;
@@ -853,7 +853,7 @@ function requestFor(view) {
     return { key: 'y|' + JSON.stringify(p), name: 'getRequestsPage', args: [p] };
   }
   if (view === 'book') {
-    const b = { year: state.by, month: state.bm, page: state.page, pageSize: BOOK_VISIBLE_ROWS, type: state.bt, reason: state.br, status: state.bs, q: state.bq.trim() };
+    const b = { year: state.by, month: state.bm, date: state.bd, page: state.page, pageSize: BOOK_VISIBLE_ROWS, type: state.bt, reason: state.br, status: state.bs, q: state.bq.trim() };
     return { key: 'b|' + JSON.stringify(b), name: 'getBookData', args: [b] };
   }
   const p = { page: state.page, pageSize: PAGE_SIZE, year: state.year, month: state.fm, type: state.ft, status: state.fs, q: state.q.trim() };
@@ -1463,6 +1463,8 @@ function buildFrame() {
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
       + '<input type="search" id="bq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
+      + '<label class="sub" for="bd">วันที่</label><input type="date" id="bd" value="' + esc(state.bd) + '" aria-label="ค้นหาตามวันที่">'
+      + '<button class="btn" type="button" id="bdClear" data-bdclear="1"' + (state.bd ? '' : ' hidden') + '>ล้างวันที่</button>'
       + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
       + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
       + '<select id="bs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
@@ -1530,14 +1532,16 @@ function renderBookTop() {
   }
   $('#bkMonths').innerHTML = tiles;
   $('#bkSub').textContent = isAll
-    ? 'ทุกปี · ค้นหาได้ข้ามทุกปี · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    ? 'ทุกปี · ' + (state.bd ? 'วันที่ ' + fmt(state.bd, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' : 'ค้นหาได้ข้ามทุกปี · ') + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
     : y
-    ? 'ปี พ.ศ. ' + (+y + 543) + ' · ' + (m ? fmtM(m) : 'ทั้งปี') + ' · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    ? 'ปี พ.ศ. ' + (+y + 543) + ' · ' + (state.bd ? 'วันที่ ' + fmt(state.bd, { day: 'numeric', month: 'long', year: 'numeric' }) : (m ? fmtM(m) : 'ทั้งปี')) + ' · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
     : 'ยังไม่มีข้อมูลคำร้อง';
 }
 
 function renderBook() {
   if (state.frame !== 'book' || !$('#tbl')) return;
+  const bdc = $('#bdClear'); if (bdc) bdc.hidden = !state.bd;
+  const bdi = $('#bd'); if (bdi && bdi.value !== state.bd) bdi.value = state.bd;
   renderBookTop();
   renderBookFilters();
   $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่พบคำร้องในช่วงที่เลือก', 'fit');
@@ -1950,6 +1954,7 @@ document.addEventListener('click', e => {
     if (!el.disabled && to >= 0 && to < state.pages && to !== state.page) { state.page = to; loadView(); }
     return;
   }
+  if (t.closest('[data-bdclear]')) { state.bd = ''; state.page = 0; loadView(); return; }
   if ((el = t.closest('[data-act]'))) {
     const a = el.dataset.act;
     if (a === 'prev') shiftDay(-1); else if (a === 'next') shiftDay(1); else setDay(TODAY);
@@ -1960,8 +1965,8 @@ document.addEventListener('click', e => {
     el.setAttribute('aria-expanded', String(!c));
     return;
   }
-  if ((el = t.closest('[data-by]'))) { state.by = el.dataset.by; state.bm = 'auto'; state.page = 0; loadView(); return; }
-  if ((el = t.closest('[data-bm]'))) { state.bm = el.dataset.bm; state.page = 0; loadView(); return; }
+  if ((el = t.closest('[data-by]'))) { state.by = el.dataset.by; state.bm = 'auto'; state.bd = ''; state.page = 0; loadView(); return; }
+  if ((el = t.closest('[data-bm]'))) { state.bm = el.dataset.bm; state.bd = ''; state.page = 0; loadView(); return; }
   if ((el = t.closest('[data-month]'))) { state.month = el.dataset.month; loadView(); return; }
   if ((el = t.closest('[data-y]'))) { state.year = el.dataset.y; state.month = ''; loadView(); return; }
   if ((el = t.closest('[data-day]'))) { state.day = el.dataset.day; location.hash = 'daily'; return; }
@@ -1980,6 +1985,10 @@ document.addEventListener('change', e => {
     case 'ft': state.ft = t.value; state.page = 0; loadView(); break;
     case 'fs': state.fs = t.value; state.page = 0; loadView(); break;
     case 'bs': state.bs = t.value; state.page = 0; loadView(); break;
+    case 'bd':
+      state.bd = t.value; state.page = 0;
+      if (state.bd && state.by !== 'all') { state.by = state.bd.slice(0, 4); state.bm = state.bd.slice(0, 7); }   // เลือกวัน → พาไปปี/เดือนของวันนั้นให้อัตโนมัติ
+      loadView(); break;
     case 'pickDay': if (t.value) setDay(t.value); break;
   }
 });
@@ -2067,7 +2076,7 @@ function route() {
   if (ym) { by = String(+ym[1] - 543); h = 'book'; }   // #book-2569 = สมุดของปี พ.ศ. 2569
   else if (h === 'book') by = 'all';                    // #book = รวมทุกปี
   state.view = ['dashboard', 'daily', 'book'].includes(h) ? h : 'dashboard';
-  if (state.view === 'book' && state.by !== by) { state.by = by; state.bm = 'auto'; }
+  if (state.view === 'book' && state.by !== by) { state.by = by; state.bm = 'auto'; state.bd = ''; }
   buildFrame();
   loadView();
 }
