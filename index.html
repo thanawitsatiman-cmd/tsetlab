@@ -737,15 +737,12 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
       <label><span>วันที่รับคำร้อง<b class="req"> *</b></span><input type="date" id="f_date"></label>
       <label><span>เลขคำร้อง<b class="req"> *</b></span><input type="text" id="f_no" placeholder="กรอกเลขที่ที่สำนักงานกำหนด" maxlength="60"></label>
       <label class="w2"><span>ประเภทคำร้อง<b class="req"> *</b></span><select id="f_type"></select></label>
-      <label class="w2" id="f_status_wrap">สถานะ<select id="f_status"></select></label>
 
       <div class="fsec">ข้อมูลหน้างาน</div>
       <label>เฟส<select id="f_phase"></select></label>
       <label>ขนาดมิเตอร์<input type="text" id="f_size" list="sizes" placeholder="เช่น 5(15)"><datalist id="sizes"><option value="5(15)"><option value="15(45)"><option value="30(100)"><option value="5(100)"></datalist></label>
       <label>เฟสที่เชื่อมต่อ (ด้านเข้า)<select id="f_in"></select></label>
       <label>ขนาดเสา (เมตร)<select id="f_pole"></select></label>
-
-      <label class="w2">หมายเหตุ<textarea id="f_note" rows="2"></textarea></label>
     </div>
     </div>
     <div class="mact"><span id="mErr" class="err" role="alert"></span><button type="button" class="btn" id="mCancel">ยกเลิก</button><button type="submit" class="btn pri" id="mSave" title="Ctrl + Enter">บันทึก</button></div>
@@ -1722,7 +1719,7 @@ function renderDrawer(historyLoading) {
   const typeHtml = types.length ? '<div class="chs">' + types.map(x => '<span class="chp">' + esc(x) + '</span>').join('') + '</div>' : '-';
   const detail = '<div class="kv"><dt>ประเภทคำร้อง</dt><dd>' + typeHtml + '</dd></div>'
     + kv('เฟส · ขนาด', (r.phase || '-') + (r.size && r.size !== '-' ? ' · ' + r.size : ''))
-    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole) + opt('หมายเหตุ', r.note)
+    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole)
     + kv('แหล่งข้อมูล', r.src);
   $('#drawer').innerHTML =
     '<div class="dhead"><div class="dh"><div style="flex:1;min-width:0"><h3>' + esc(r.name || '(ไม่ระบุชื่อ)') + '</h3>'
@@ -1840,10 +1837,6 @@ function onStatusChange(el) {
       noteVer(res);
       memo.clear();
       toast('อัปเดตสถานะแล้ว');
-      if (next === 'ไม่ผ่าน') {   // เลือกไม่ผ่านจากตาราง → เปิดฟอร์มให้พิมพ์สาเหตุต่อทันที (ถ้ายังไม่มี)
-        const row = state.rows.find(r => r.id === id);
-        if (!row || !row.reason) setTimeout(() => openForm(id, 'reason'), 0);
-      }
       if (state.detail === id) renderDrawer(false);
     } catch (e) {
       console.error(e);
@@ -1857,7 +1850,7 @@ function onStatusChange(el) {
    10. เพิ่ม / แก้ไข / ลบ
    ===================================================================== */
 let formBase = '', closeArmed = 0;
-const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_status', '#f_phase', '#f_size', '#f_in', '#f_pole', '#f_note'];
+const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_phase', '#f_size', '#f_in', '#f_pole'];
 function formSnap() { return JSON.stringify(FORM_FIELDS.map(k => $(k).value)); }
 
 /** ปิดฟอร์ม: ถ้ามีข้อมูลที่ยังไม่บันทึก ต้องกดปิดซ้ำภายใน 4 วินาทีเพื่อทิ้ง */
@@ -1889,16 +1882,13 @@ async function openForm(id, focus) {
   $('#f_addr').value = r ? r.address || '' : '';
   $('#f_phone').value = r ? r.phone || '' : '';
   fillSel('#f_type', ['', ...typeList()], r ? r.type : '');
-  fillSel('#f_status', ['', ...STATUS], r && r.status);
-  $('#f_status_wrap').hidden = !r;   // เพิ่มใหม่: ซ่อนช่องสถานะ (ไปอัปเดตภายหลัง) / แก้ไข: แสดงตามเดิม
   fillSel('#f_phase', ['1P', '3P', '-'], r && r.phase);
   fillSel('#f_in', ['-', 'A', 'B', 'C'], (r && r.inPhase) || '-');
   fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
   $('#f_size').value = r && r.size && r.size !== '-' ? r.size : '';
-  $('#f_note').value = r ? r.note || '' : '';
   formBase = formSnap();
   $('#modal').hidden = false;
-  (focus === 'reason' && r ? $('#f_note') : $('#f_date')).focus();
+  $('#f_date').focus();
 }
 
 async function submitForm(e) {
@@ -1925,10 +1915,8 @@ async function submitForm(e) {
     phase: $('#f_phase').value,
     size: $('#f_size').value.trim() || '-',
     inPhase: $('#f_in').value,
-    pole: $('#f_pole').value,
-    note: $('#f_note').value.trim()
+    pole: $('#f_pole').value
   };
-  if (editing) d.status = $('#f_status').value;
   const btn = $('#mSave'), wasEditing = !!editing;
   btn.disabled = true;
   btn.textContent = 'กำลังบันทึก…';
@@ -1941,7 +1929,6 @@ async function submitForm(e) {
       if (res && res.id && state.detail === editing) state.detail = res.id;   // เลขที่คำร้องเปลี่ยน = รหัสอ้างอิงเปลี่ยนตาม
     } else {
       d.src = 'บันทึกในเว็บ';
-      d.status = '';                        // คำร้องใหม่เริ่มที่ "รอผลตรวจ" แล้วค่อยอัปเดตทีหลัง
       noteVer(await call('createRequest', [d]));
     }
     closeForm(true);
