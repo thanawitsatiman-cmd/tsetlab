@@ -552,6 +552,17 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 .chart g.colx:hover .hit { fill: color-mix(in srgb, var(--accent) 9%, transparent); }
 .mtile[aria-pressed="true"]:hover, .ychip[aria-pressed="true"]:hover { background: var(--accent); color: var(--accent-ink); }
 .lnk:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+/* ปุ่มเดือน: เส้นทึบบาง ๆ เดือนที่ไม่มีข้อมูลจางลง ตอนชี้ขึ้นพื้นม่วงอ่อน ไม่ใช้เส้นประ */
+.mtile { border: 1px solid var(--line); box-shadow: none; background: var(--surface); transition: background .15s, border-color .15s, transform .15s, box-shadow .15s; }
+.mtile:hover { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); transform: translateY(-1px); }
+.mtile.zero { background: color-mix(in srgb, var(--surface2) 55%, transparent); border-style: solid; border-color: transparent; }
+.mtile.zero .m, .mtile.zero .c { opacity: .55; }
+.mtile.zero:hover { background: var(--surface2); border-color: var(--line); transform: none; }
+.mtile.all { background: var(--accent-soft); border-color: transparent; }
+.mtile.all:hover { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+.mtile[aria-pressed="true"], .mtile[aria-pressed="true"]:hover { background: var(--accent); border-color: var(--accent); transform: none; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 28%, transparent); }
+.mtile .o { font-weight: 500; }
 </style>
 </head>
 
