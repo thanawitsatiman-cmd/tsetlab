@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<title>ระบบติดตามคำร้อง</title>
+<title>สมุดคุมคำร้องขอใช้ไฟ</title>
 <script src="https://accounts.google.com/gsi/client" async defer onload="window.initGoogle && window.initGoogle()"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -477,7 +477,7 @@ td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: norma
 <div id="login" class="login" hidden>
   <div class="lcard">
     <div class="mark" aria-hidden="true"><img src="favicon.svg" alt=""></div>
-    <h2>ระบบติดตามคำร้อง</h2>
+    <h2>สมุดคุมคำร้องขอใช้ไฟ</h2>
     <p class="lsub">สำนักงานการไฟฟ้า</p>
     <div class="who" id="lWho" hidden><img id="lAv" alt="" width="44" height="44"><div><b id="lName"></b><span id="lRole"></span></div></div>
     <div id="gateMsg" class="lnote" role="status">กำลังตรวจสอบสิทธิ์ผู้ใช้…</div>
@@ -492,7 +492,7 @@ td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: norma
   <aside class="side">
     <div class="brand">
       <div class="mark" aria-hidden="true"><img src="favicon.svg" alt=""></div>
-      <div><h1>ระบบติดตามคำร้อง</h1><p>สำนักงานการไฟฟ้า</p></div>
+      <div><h1>สมุดคุมคำร้องขอใช้ไฟ</h1><p>สำนักงานการไฟฟ้า</p></div>
     </div>
     <nav aria-label="เมนูหลัก">
       <a href="#dashboard" data-v="dashboard"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>ภาพรวม</span></a>
@@ -1293,7 +1293,7 @@ function buildFrame() {
   if (view === 'book') {
     $('#yearWrap').hidden = true;
     $('#view').innerHTML =
-      '<div class="head"><div><h2>สมุดคุมคำร้องใช้ไฟ</h2><div class="sub" id="bkSub">กำลังโหลด…</div></div></div>'
+      '<div class="head"><div><h2>สมุดคุมคำร้องขอใช้ไฟ</h2><div class="sub" id="bkSub">กำลังโหลด…</div></div></div>'
       + '<div class="bk-years" id="bkYears" role="group" aria-label="เลือกปี พ.ศ."></div>'
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
