@@ -1606,10 +1606,12 @@ function renderBookTop() {
     }
   }
   $('#bkMonths').innerHTML = tiles;
+  const bkCnt = 'ทั้งหมด ' + state.total.toLocaleString('th-TH') + ' รายการ · ยังรอผลตรวจ ' + state.openCount.toLocaleString('th-TH') + ' รายการ';
+  const bkDay = state.bd ? 'วันที่ ' + fmt(state.bd, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
   $('#bkSub').textContent = isAll
-    ? 'ทุกปี · ' + (state.bd ? 'วันที่ ' + fmt(state.bd, { day: 'numeric', month: 'long', year: 'numeric' }) + ' · ' : 'ค้นหาได้ข้ามทุกปี · ') + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    ? 'ทุกปี' + (bkDay ? ' · ' + bkDay : '') + ' · ' + bkCnt
     : y
-    ? 'ปี พ.ศ. ' + (+y + 543) + ' · ' + (state.bd ? 'วันที่ ' + fmt(state.bd, { day: 'numeric', month: 'long', year: 'numeric' }) : (m ? fmtM(m) : 'ทั้งปี')) + ' · ' + state.total.toLocaleString('th-TH') + ' รายการ · รอผลตรวจ ' + state.openCount + ' รายการ'
+    ? 'ปี พ.ศ. ' + (+y + 543) + ' · ' + (bkDay || (m ? fmtM(m) : 'ทั้งปี')) + ' · ' + bkCnt
     : 'ยังไม่มีข้อมูลคำร้อง';
 }
 
