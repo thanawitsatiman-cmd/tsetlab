@@ -347,6 +347,10 @@ td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: norma
 .mpt:hover { background: var(--surface2); }
 .mpt[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 .mpl { overflow: auto; padding: 6px; overscroll-behavior: contain; flex: 1 1 auto; min-height: 80px; }
+.szq { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.szq button { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 11px; font-size: 13px; cursor: pointer; }
+.szq button:hover { background: var(--surface2); }
+.szq button.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600; }
 .mpo { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; cursor: pointer; font-size: 14px; line-height: 1.35; border: 1px solid transparent; }
 .mpo + .mpo { margin-top: 2px; }
 .mpo[hidden], .ckb[hidden] { display: none !important; }
@@ -740,7 +744,7 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 
       <div class="fsec">ข้อมูลหน้างาน</div>
       <label>เฟส<select id="f_phase"></select></label>
-      <label>ขนาดมิเตอร์<input type="text" id="f_size" list="sizes" placeholder="เช่น 5(15)"><datalist id="sizes"><option value="5(15)"><option value="15(45)"><option value="30(100)"><option value="5(100)"></datalist></label>
+      <label>ขนาดมิเตอร์<input type="text" id="f_size" placeholder="เช่น 5(15) หรือพิมพ์เอง" autocomplete="off"><span class="szq" id="f_sizeq"></span></label>
       <label>เฟสที่เชื่อมต่อ (ด้านเข้า)<select id="f_in"></select></label>
       <label>ขนาดเสา (เมตร)<select id="f_pole"></select></label>
     </div>
@@ -1852,29 +1856,26 @@ function onStatusChange(el) {
    ===================================================================== */
 let formBase = '', closeArmed = 0;
 const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_phase', '#f_size', '#f_in', '#f_pole'];
-/** ช่อง "ขนาดมิเตอร์": datalist ของเบราว์เซอร์จะกรองรายการตามข้อความที่พิมพ์อยู่ (ค่าเดิม 5(15) ทำให้เหลือแค่ 2 รายการ)
- *  จึงล้างช่องชั่วคราวตอนกดเข้าไป เพื่อให้เห็นทุกรายการ แล้วคืนค่าเดิมถ้าไม่ได้เลือก/พิมพ์อะไรใหม่ */
+/** ช่อง "ขนาดมิเตอร์": พิมพ์เองได้ และมีปุ่มลัดแสดงทุกขนาดเสมอ (ไม่ใช้ datalist เพราะเบราว์เซอร์กรองรายการตามค่าที่อยู่ในช่อง) */
+const SIZE_OPTS = ['5(15)', '15(45)', '30(100)', '5(100)'];
 const sizeEl = $('#f_size');
-function sizeRestore() {
-  if (sizeEl.dataset.prev !== undefined) {
-    if (!sizeEl.value.trim()) sizeEl.value = sizeEl.dataset.prev;
-    delete sizeEl.dataset.prev;
-    sizeEl.placeholder = 'เช่น 5(15)';
-  }
+function markSize() {
+  const v = sizeEl.value.trim();
+  document.querySelectorAll('#f_sizeq button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
 }
-sizeEl.addEventListener('focus', () => {
-  if (sizeEl.dataset.prev !== undefined) return;
-  sizeEl.dataset.prev = sizeEl.value;
-  if (sizeEl.value) sizeEl.placeholder = sizeEl.value + '  (เลือกใหม่หรือพิมพ์เอง)';
-  sizeEl.value = '';
+$('#f_sizeq').innerHTML = SIZE_OPTS.map(v => '<button type="button" data-v="' + v + '">' + v + '</button>').join('');
+$('#f_sizeq').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  e.preventDefault();
+  sizeEl.value = b.dataset.v;
+  markSize();
 });
-sizeEl.addEventListener('blur', sizeRestore);
+sizeEl.addEventListener('input', markSize);
 
 function formSnap() { return JSON.stringify(FORM_FIELDS.map(k => $(k).value)); }
 
 /** ปิดฟอร์ม: ถ้ามีข้อมูลที่ยังไม่บันทึก ต้องกดปิดซ้ำภายใน 4 วินาทีเพื่อทิ้ง */
 function closeForm(force) {
-  sizeRestore();
   if (!force && formSnap() !== formBase && Date.now() - closeArmed > 4000) {
     closeArmed = Date.now();
     $('#mErr').textContent = 'มีข้อมูลที่ยังไม่บันทึก — กดปิดอีกครั้งเพื่อทิ้งการแก้ไข';
@@ -1905,8 +1906,8 @@ async function openForm(id, focus) {
   fillSel('#f_phase', ['1P', '3P', '-'], r && r.phase);
   fillSel('#f_in', ['-', 'A', 'B', 'C'], (r && r.inPhase) || '-');
   fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
-  delete sizeEl.dataset.prev; sizeEl.placeholder = 'เช่น 5(15)';
   $('#f_size').value = r && r.size && r.size !== '-' ? r.size : '';
+  markSize();
   formBase = formSnap();
   $('#modal').hidden = false;
   $('#f_date').focus();
@@ -1914,7 +1915,6 @@ async function openForm(id, focus) {
 
 async function submitForm(e) {
   e.preventDefault();
-  sizeRestore();   // กด Enter ตอนยังอยู่ในช่องขนาดมิเตอร์ ให้ใช้ค่าเดิมถ้าไม่ได้พิมพ์ใหม่
   const date = $('#f_date').value;
   document.querySelectorAll('#form .invalid').forEach(x => x.classList.remove('invalid'));
   const miss = [];
