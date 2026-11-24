@@ -583,6 +583,87 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 @keyframes cfmFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cfmPop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .cfm, .cfm-box { animation: none; } }
+
+/* =====================================================================
+   หน้าจอโทรศัพท์: ตารางเปลี่ยนเป็นการ์ดต่อคำร้อง, ปุ่ม/ช่องกรอกใหญ่พอให้แตะ, ไม่ต้องเลื่อนซ้ายขวา
+   ===================================================================== */
+@media (max-width: 700px) {
+  main { padding-block: 14px 36px; }
+  .head h2 { font-size: 18px; }
+
+  /* ช่องกรอง/ปุ่ม: สูงพอแตะ (44px) และตัวอักษร 16px กัน iOS ซูมเองตอนแตะช่อง */
+  select, input[type=search], input[type=date], .btn, .msf { min-height: 44px; font-size: 16px; }
+  .btn { padding: 8px 14px; }
+
+  /* แถบเครื่องมือค้นหา: ช่องค้นหาเต็มแถว ตัวกรองแบ่งสองคอลัมน์ */
+  .ctl.mb { gap: 8px; }
+  .ctl.mb > input[type=search] { flex: 1 1 100%; min-width: 0 !important; width: 100%; }
+  .ctl.mb > select, .ctl.mb > .msf { flex: 1 1 calc(50% - 4px); max-width: none; min-width: 0; }
+  .ctl.mb > label.sub { flex: none; }
+  .ctl.mb > #bd { flex: 1 1 0; }
+
+  /* หน้ารายวัน: แถวเลือกวันเต็มความกว้าง */
+  .head .ctl { width: 100%; }
+  .head .ctl input[type=date] { flex: 1; min-width: 0; }
+
+  /* ปุ่มเดือน: 4 คอลัมน์ แตะง่ายกว่า 6 */
+  .bk-months { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .mtile { padding: 9px 4px 8px; min-height: 64px; }
+  .mtile .m { font-size: 14px; }
+  .bk-hint { text-align: left; }
+
+  /* ตาราง → การ์ด */
+  .tablewrap, .tablewrap.fit { border: 0; background: none; border-radius: 0; overflow: visible; }
+  .tablewrap table, .tablewrap thead, .tablewrap tbody { display: block; width: 100%; }
+  .tablewrap thead { display: none; }
+  .tablewrap tbody tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .tablewrap tbody tr:hover { background: var(--surface); }
+  .tablewrap tbody tr:active { background: var(--surface2); }
+  .tablewrap td, .tablewrap.fit td {
+    display: block; padding: 0; border: 0; white-space: normal; min-width: 0 !important; max-width: none !important;
+    text-align: left; overflow-wrap: anywhere; font-size: 14px;
+  }
+  .tablewrap td::before {
+    content: attr(data-label); display: block; font-size: 11.5px; line-height: 1.3; color: var(--muted); font-weight: 600; margin-bottom: 1px;
+  }
+  /* ผู้ขอ = หัวการ์ด */
+  .tablewrap td:nth-child(3) { grid-column: 1 / -1; font-size: 16px; font-weight: 700; order: -1; }
+  .tablewrap td:nth-child(3)::before { display: none; }
+  /* วันที่ + เลขที่ อยู่บรรทัดบน */
+  .tablewrap td:nth-child(1), .tablewrap td:nth-child(2) { order: -2; }
+  .tablewrap td:nth-child(2) { text-align: right; }
+  .tablewrap td:nth-child(2)::before { text-align: right; }
+  /* ช่องยาวเต็มแถว */
+  .tablewrap td:nth-child(4), .tablewrap td:nth-child(5),
+  .tablewrap td:nth-child(8), .tablewrap td:nth-child(9) { grid-column: 1 / -1; }
+  /* สถานะ / สาเหตุ ปุ่มเต็มความกว้าง */
+  .tablewrap td .st, .tablewrap td .st.rs, .tablewrap td .st.rs.msb:not(.big), .tablewrap.fit .st, .tablewrap.fit .st.rs.msb:not(.big) {
+    width: 100%; max-width: none !important; min-width: 0 !important; min-height: 44px; font-size: 16px; padding: 8px 12px; border-radius: 10px;
+  }
+  .tablewrap td .pill { font-size: 14px; padding: 3px 12px; }
+  .tablewrap td.why .msb { justify-content: space-between; }
+  .tg { white-space: normal; }
+
+  /* หน้าสรุป (ตารางสรุปรายเดือน) ยังเลื่อนซ้ายขวาในกรอบของมันเอง */
+  .scroll table { display: table; }
+  .scroll thead { display: table-header-group; }
+  .scroll tbody { display: table-row-group; }
+
+  /* ตัวเลือกหลายรายการและลิ้นชักรายละเอียด: ปุ่มปิด/แถวตัวเลือกใหญ่ขึ้น */
+  .dx { width: 44px; height: 44px; }
+  .mpo, .ckb { min-height: 44px; }
+  .pager { gap: 8px; }
+  .pager .pg { min-width: 40px; height: 40px; }
+  .toast { max-width: calc(100vw - 32px); text-align: center; }
+}
+@media (max-width: 380px) {
+  .bk-months { gap: 6px; }
+  .tablewrap tbody tr { padding: 10px 12px; }
+}
 </style>
 </head>
 
@@ -1239,15 +1320,15 @@ const THEAD = '<thead><tr><th>วันที่</th><th>เลขที่</th>
 function rowHtml(r) {
   const size = r.size && r.size !== '-' ? ' · ' + esc(r.size) : '';
   return '<tr data-row="' + esc(r.id) + '">'
-    + '<td>' + fmt(r.date) + '</td>'
-    + '<td>' + esc(r.no) + '</td>'
-    + '<td>' + esc(r.name) + '</td>'
-    + '<td class="addr">' + esc(r.address || '-') + '</td>'
-    + '<td>' + typeTags(r.type) + '</td>'
-    + '<td>' + esc(r.phase && r.phase !== '-' ? r.phase : '-') + size + '</td>'
-    + '<td>' + esc(r.route) + '</td>'
-    + '<td>' + statusCell(r) + '</td>'
-    + '<td class="why">' + reasonCell(r) + '</td></tr>';
+    + '<td data-label="วันที่">' + fmt(r.date) + '</td>'
+    + '<td data-label="เลขที่">' + esc(r.no) + '</td>'
+    + '<td data-label="ผู้ขอ">' + esc(r.name) + '</td>'
+    + '<td class="addr" data-label="ที่อยู่">' + esc(r.address || '-') + '</td>'
+    + '<td data-label="ประเภทคำร้อง">' + typeTags(r.type) + '</td>'
+    + '<td data-label="เฟส · ขนาด">' + esc(r.phase && r.phase !== '-' ? r.phase : '-') + size + '</td>'
+    + '<td data-label="สายจดหน่วย">' + esc(r.route) + '</td>'
+    + '<td data-label="สถานะ">' + statusCell(r) + '</td>'
+    + '<td class="why" data-label="สาเหตุ">' + reasonCell(r) + '</td></tr>';
 }
 
 function tableHtml(rows, emptyMsg, cls) {
