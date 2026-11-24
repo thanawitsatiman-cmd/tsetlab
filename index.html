@@ -633,7 +633,7 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
   /* ผู้ขอ = หัวการ์ด */
   .tablewrap td:nth-child(3) { grid-column: 1 / -1; font-size: 16px; font-weight: 700; order: -1; }
   .tablewrap td:nth-child(3)::before { display: none; }
-  /* วันที่ + เลขที่ อยู่บรรทัดบน */
+  /* วันที่ + เลขคำร้อง อยู่บรรทัดบน */
   .tablewrap td:nth-child(1), .tablewrap td:nth-child(2) { order: -2; }
   .tablewrap td:nth-child(2) { text-align: right; }
   .tablewrap td:nth-child(2)::before { text-align: right; }
@@ -735,7 +735,7 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 
       <div class="fsec">รายละเอียดคำร้อง</div>
       <label><span>วันที่รับคำร้อง<b class="req"> *</b></span><input type="date" id="f_date"></label>
-      <label><span>เลขที่คำร้อง<b class="req"> *</b></span><input type="text" id="f_no" placeholder="กรอกเลขที่ที่สำนักงานกำหนด" maxlength="60"></label>
+      <label><span>เลขคำร้อง<b class="req"> *</b></span><input type="text" id="f_no" placeholder="กรอกเลขที่ที่สำนักงานกำหนด" maxlength="60"></label>
       <label class="w2"><span>ประเภทคำร้อง<b class="req"> *</b></span><select id="f_type"></select></label>
       <label class="w2">สถานะ<select id="f_status"></select></label>
 
@@ -1315,13 +1315,13 @@ function renderBookFilters() {
   put(br, state.br, msLabel(state.br, 'ทุกสาเหตุ', 'สาเหตุ', x => x === '__none' ? 'ยังไม่ระบุสาเหตุ' : x));
 }
 
-const THEAD = '<thead><tr><th>วันที่</th><th>เลขที่</th><th>ผู้ขอ</th><th>ที่อยู่ลูกค้า</th><th>ประเภทคำร้อง</th><th>เฟส · ขนาด</th><th>สายจดหน่วย</th><th>สถานะ</th><th>สาเหตุ</th></tr></thead>';
+const THEAD = '<thead><tr><th>วันที่</th><th>เลขคำร้อง</th><th>ผู้ขอ</th><th>ที่อยู่ลูกค้า</th><th>ประเภทคำร้อง</th><th>เฟส · ขนาด</th><th>สายจดหน่วย</th><th>สถานะ</th><th>สาเหตุ</th></tr></thead>';
 
 function rowHtml(r) {
   const size = r.size && r.size !== '-' ? ' · ' + esc(r.size) : '';
   return '<tr data-row="' + esc(r.id) + '">'
     + '<td data-label="วันที่">' + fmt(r.date) + '</td>'
-    + '<td data-label="เลขที่">' + esc(r.no) + '</td>'
+    + '<td data-label="เลขคำร้อง">' + esc(r.no) + '</td>'
     + '<td data-label="ผู้ขอ">' + esc(r.name) + '</td>'
     + '<td class="addr" data-label="ที่อยู่">' + esc(r.address || '-') + '</td>'
     + '<td data-label="ประเภทคำร้อง">' + typeTags(r.type) + '</td>'
@@ -1526,7 +1526,7 @@ function buildFrame() {
     $('#view').innerHTML =
       '<div class="head"><div><h2>คำร้องทั้งหมด</h2><div class="sub" id="allSub"></div></div></div>'
       + '<div class="ctl mb">'
-      + '<input type="search" id="fq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.q) + '" style="min-width:230px">'
+      + '<input type="search" id="fq" placeholder="ค้นหาเลขคำร้อง ชื่อ สายจดหน่วย" value="' + esc(state.q) + '" style="min-width:230px">'
       + '<select id="fm"></select><select id="ft"></select>'
       + '<select id="fs"><option value="">ทุกสถานะ</option><option value="__open">รอผลตรวจ</option><option value="__pass">ผ่าน</option><option value="__fail">ไม่ผ่าน</option></select>'
       + '</div>'
@@ -1543,7 +1543,7 @@ function buildFrame() {
       + '<div class="bk-years" id="bkYears" role="group" aria-label="เลือกปี พ.ศ."></div>'
       + '<div class="bk-months" id="bkMonths" role="group" aria-label="เลือกเดือน"></div>'
       + '<div class="ctl mb">'
-      + '<input type="search" id="bq" placeholder="ค้นหาเลขที่ ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
+      + '<input type="search" id="bq" placeholder="ค้นหาเลขคำร้อง ชื่อ สายจดหน่วย" value="' + esc(state.bq) + '" style="min-width:230px">'
       + '<label class="sub" id="bdLbl" for="bd">วันที่</label><select id="bd" aria-label="เลือกวันที่ของเดือนที่เลือก"></select>'
       + '<button class="btn msf" type="button" id="bt" data-ms="bt" aria-haspopup="dialog" aria-label="กรองตามประเภท"></button>'
       + '<button class="btn msf" type="button" id="br" data-ms="br" aria-haspopup="dialog" aria-label="กรองตามสาเหตุ"></button>'
@@ -1909,7 +1909,7 @@ async function submitForm(e) {
   document.querySelectorAll('#form .invalid').forEach(x => x.classList.remove('invalid'));
   const miss = [];
   if (!date) miss.push(['#f_date', 'กรอกวันที่รับคำร้อง']);
-  if (!$('#f_no').value.trim()) miss.push(['#f_no', 'กรอกเลขที่คำร้อง']);
+  if (!$('#f_no').value.trim()) miss.push(['#f_no', 'กรอกเลขคำร้อง']);
   if (!$('#f_type').value) miss.push(['#f_type', 'เลือกประเภทคำร้อง']);
   if (miss.length) {
     miss.forEach(m => $(m[0]).classList.add('invalid'));
@@ -1970,7 +1970,7 @@ function confirmDelete(btn) {
     + '<div class="cfm-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg></div>'
     + '<h3 id="cfmT">ลบคำร้องนี้หรือไม่</h3>'
     + '<p class="cfm-sub" id="cfmD">ตรวจสอบรายการที่จะลบอีกครั้ง</p>'
-    + ((r.no || r.name) ? '<div class="cfm-card">' + row('เลขที่', r.no) + row('ผู้ขอ', r.name) + row('ประเภท', typ) + (r.date ? row('วันที่รับ', fmt(r.date)) : '') + '</div>' : '')
+    + ((r.no || r.name) ? '<div class="cfm-card">' + row('เลขคำร้อง', r.no) + row('ผู้ขอ', r.name) + row('ประเภท', typ) + (r.date ? row('วันที่รับ', fmt(r.date)) : '') + '</div>' : '')
     + '<p class="cfm-warn">เมื่อลบแล้วจะไม่สามารถกู้คืนได้</p>'
     + '<div class="cfm-act"><button type="button" class="btn" data-c="no">ยกเลิก</button><button type="button" class="btn danger" data-c="yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>ลบคำร้อง</button></div></div>';
   document.body.appendChild(box);
