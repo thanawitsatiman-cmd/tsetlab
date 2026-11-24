@@ -1145,7 +1145,7 @@ function pagerHtml(withRange) {
 
 function updateYearSelector() {
   const w = $('#yearWrap'), s = $('#selYear'), years = state.years || [];
-  if (!years.length || state.view === 'book') { w.hidden = true; return; }
+  if (!years.length || state.view === 'book' || state.view === 'daily') { w.hidden = true; return; }   // ใช้เฉพาะหน้าภาพรวม
   w.hidden = false;
   const sig = years.join(',') + '|' + state.year;
   if (s.dataset.sig === sig) return;
@@ -1268,6 +1268,7 @@ function buildFrame() {
   $$('nav a').forEach(a => {
     if (a.dataset.v === view) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   });
+  updateYearSelector();   // ซ่อน/แสดงช่องเลือกปีทันทีที่เปลี่ยนหน้า
 
   if (view === 'dashboard') {
     if (state.summary) renderDashboard();
