@@ -492,6 +492,60 @@ td.why { font-size: 13px; max-width: 270px; min-width: 170px; white-space: norma
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* =====================================================================
+   ปรับหน้าตาให้สบายตา: สีนุ่มลง ตัวอักษรโตขึ้น เว้นระยะมากขึ้น มุมโค้งและเงาบาง ๆ
+   ===================================================================== */
+:root {
+  --bg: #f8f6fb; --surface2: #f4f1f8; --line: #e8e3ef; --ink: #2b2436; --muted: #70697f; --accent-soft: #f2eaf9;
+  --shadow: 0 1px 2px rgba(43, 30, 64, .05), 0 6px 18px rgba(43, 30, 64, .04);
+}
+body { font-size: 15px; line-height: 1.65; }
+.shell { grid-template-columns: 268px minmax(0, 1fr); }
+.side { gap: 26px; }
+.brand h1 { font-size: 16.5px; font-weight: 600; }
+nav { gap: 4px; }
+nav a { padding: 11px 14px; border-radius: 12px; font-weight: 500; }
+nav a[aria-current="page"] { font-weight: 600; }
+nav .trow a { padding-right: 44px; white-space: nowrap; }
+nav .kids a { font-size: 14px; padding: 9px 12px; border-radius: 10px; }
+nav .kids { margin-left: 24px; border-left-width: 1px; }
+nav a .cnt { font-size: 12.5px; padding: 0 9px; }
+.side-foot .who b { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.side-foot .who .rolechip { font-size: 12px; }
+
+.bar { box-shadow: none; }
+main { padding-top: 26px; }
+.head { margin-bottom: 18px; }
+.head h2 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+.head .sub, .sub { font-size: 13.5px; }
+
+.panel, .kpi { border-radius: 14px; border-color: var(--line); box-shadow: var(--shadow); }
+.panel { padding: 20px; }
+.kpi { padding: 16px 18px; }
+.kpi .v { font-weight: 600; }
+
+.btn, select, input[type=search], input[type=date] { border-radius: 10px; border-color: var(--line); min-height: 38px; }
+.btn { padding: 8px 14px; }
+.btn:hover { background: var(--surface2); }
+
+th, td { padding: 13px 14px; border-bottom-color: var(--line); }
+th { font-size: 12.5px; font-weight: 500; background: var(--surface2); letter-spacing: .01em; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
+
+.mtile { border-radius: 14px; border-color: var(--line); box-shadow: var(--shadow); padding: 9px 4px 8px; }
+.mtile .m { font-weight: 600; font-size: 13px; }
+.mtile .c { font-weight: 600; }
+.mtile.zero { background: transparent; box-shadow: none; border-style: dashed; }
+.mtile.zero .m, .mtile.zero .c { opacity: .5; }
+.mtile.all { background: var(--accent-soft); border-color: transparent; }
+.mtile[aria-pressed="true"] { box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent); }
+.bk-years .bk-legend { font-size: 13px; }
+
+.st { padding: 4px 10px; font-size: 13px; }
+.st.rs { border-radius: 10px; padding: 6px 10px; }
+.pager .pg { border-radius: 10px; }
 </style>
 </head>
 
