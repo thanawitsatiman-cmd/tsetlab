@@ -565,15 +565,24 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 .mtile .o { font-weight: 500; }
 
 /* กล่องยืนยันการลบ */
-.cfm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(20, 12, 28, .55); }
-.cfm-box { width: min(420px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 20px 50px rgba(0, 0, 0, .3); padding: 24px; }
-.cfm-ic { width: 44px; height: 44px; border-radius: 50%; background: var(--bad-soft); color: var(--bad); display: grid; place-items: center; margin-bottom: 14px; }
-.cfm-box h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
-.cfm-box p { margin: 0; color: var(--muted); line-height: 1.6; overflow-wrap: anywhere; }
-.cfm-box p b { color: var(--ink); font-weight: 600; }
-.cfm-act { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.cfm { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(24, 14, 34, .55); backdrop-filter: blur(3px); animation: cfmFade .15s ease-out; }
+.cfm-box { width: min(400px, 100%); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, .3); padding: 28px 24px 22px; text-align: center; animation: cfmPop .18s ease-out; }
+.cfm-ic { width: 56px; height: 56px; margin: 4px auto 18px; border-radius: 50%; background: var(--bad-soft); color: var(--bad); display: grid; place-items: center; box-shadow: 0 0 0 8px color-mix(in srgb, var(--bad-soft) 45%, transparent); }
+.cfm-box h3 { margin: 0; font-size: 19px; font-weight: 600; }
+.cfm-sub { margin: 6px 0 0; color: var(--muted); }
+.cfm-card { margin: 18px 0 0; padding: 4px 16px; background: var(--surface2); border-radius: 12px; text-align: left; }
+.cfm-card div { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; font-size: 14px; }
+.cfm-card div + div { border-top: 1px solid var(--line); }
+.cfm-card span { color: var(--muted); flex: none; }
+.cfm-card b { font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+.cfm-warn { margin: 14px 0 0; font-size: 13px; color: var(--bad); }
+.cfm-act { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.cfm-act .btn { min-height: 44px; border-radius: 12px; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; font-weight: 600; }
-.btn.danger:hover { background: var(--bad); filter: brightness(1.08); }
+.btn.danger:hover { background: var(--bad); filter: brightness(1.1); }
+@keyframes cfmFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cfmPop { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cfm, .cfm-box { animation: none; } }
 </style>
 </head>
 
@@ -1846,15 +1855,18 @@ async function submitForm(e) {
 function confirmDelete(btn) {
   const id = btn.dataset.del;
   const r = (state.detailData && state.detailData.id === id ? state.detailData : null) || state.rows.find(x => x.id === id) || {};
-  const who = [r.no, r.name].filter(Boolean).map(esc).join(' · ');
+  const row = (k, v) => v ? '<div><span>' + k + '</span><b>' + esc(String(v)) + '</b></div>' : '';
+  const typ = Array.isArray(r.type) ? r.type.join(', ') : r.type;
   const opener = document.activeElement;
   const box = document.createElement('div');
   box.className = 'cfm';
   box.innerHTML = '<div class="cfm-box" role="alertdialog" aria-modal="true" aria-labelledby="cfmT" aria-describedby="cfmD">'
-    + '<div class="cfm-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg></div>'
-    + '<h3 id="cfmT">ยืนยันการลบคำร้อง</h3>'
-    + '<p id="cfmD">' + (who ? 'ต้องการลบคำร้อง <b>' + who + '</b> ใช่หรือไม่<br>' : 'ต้องการลบคำร้องนี้ใช่หรือไม่<br>') + 'เมื่อลบแล้วจะไม่สามารถกู้คืนได้</p>'
-    + '<div class="cfm-act"><button type="button" class="btn" data-c="no">ยกเลิก</button><button type="button" class="btn danger" data-c="yes">ลบคำร้อง</button></div></div>';
+    + '<div class="cfm-ic" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg></div>'
+    + '<h3 id="cfmT">ลบคำร้องนี้หรือไม่</h3>'
+    + '<p class="cfm-sub" id="cfmD">ตรวจสอบรายการที่จะลบอีกครั้ง</p>'
+    + ((r.no || r.name) ? '<div class="cfm-card">' + row('เลขที่', r.no) + row('ผู้ขอ', r.name) + row('ประเภท', typ) + (r.date ? row('วันที่รับ', fmt(r.date)) : '') + '</div>' : '')
+    + '<p class="cfm-warn">เมื่อลบแล้วจะไม่สามารถกู้คืนได้</p>'
+    + '<div class="cfm-act"><button type="button" class="btn" data-c="no">ยกเลิก</button><button type="button" class="btn danger" data-c="yes"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>ลบคำร้อง</button></div></div>';
   document.body.appendChild(box);
   const close = () => { box.remove(); document.removeEventListener('keydown', onKey, true); if (opener && opener.isConnected) opener.focus(); };
   const onKey = e => {
