@@ -225,7 +225,7 @@ tbody tr:hover { background: var(--surface2); }
   scrollbar-width: thin; scrollbar-color: var(--muted) var(--surface2);   /* ไม่มีแถบเลื่อนในตาราง ใช้การเลื่อนของหน้าเว็บ เหมือนหน้ารายวัน */
 }
 /* สมุดคุมคำร้อง: ตารางสูงพอดีจอ เลื่อนขึ้นลงในตาราง ส่วนแนวนอนบีบคอลัมน์ให้พอดี ไม่ต้องเลื่อนซ้ายขวา */
-.tablewrap.fit { overflow: auto; max-height: calc(100vh - 230px); min-height: 0; overscroll-behavior: contain; }
+.tablewrap.fit { overflow-x: auto; overflow-y: visible; max-height: none; }   /* ไม่มีแถบเลื่อนในตาราง: เลื่อนทั้งหน้าแทน */
 .tablewrap.fit th, .tablewrap.fit td { padding: 8px 8px; }
 .tablewrap.fit td.addr { min-width: 130px; max-width: 190px; }
 .tablewrap.fit td.why { min-width: 150px; max-width: 215px; }
@@ -571,7 +571,7 @@ function reasonLv(x) {
 const lvVar = n => 'var(--lv' + (n || 0) + ')';
 const TCOL   = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
 const PAGE_SIZE = 50, DAILY_PAGE_SIZE = 100;
-const BOOK_VISIBLE_ROWS = 15;   // สมุดคุมคำร้อง: 15 แถวต่อหน้า (ความสูงตารางพอดี 15 แถว)
+const BOOK_VISIBLE_ROWS = 15;   // สมุดคุมคำร้อง: 15 แถวต่อหน้า
 const SEARCH_DELAY = 150;        // ms หลังหยุดพิมพ์จึงค้นหา
 const FRESH_MS = 10000;          // ข้อมูลที่โหลดไว้ไม่เกินนี้ ไม่ต้องโหลดซ้ำ
 const POLL_MS = 2000;             // ถามบ่อยเมื่อกำลังใช้งาน
@@ -1344,24 +1344,7 @@ function renderBook() {
   renderBookFilters();
   $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่พบคำร้องในช่วงที่เลือก', 'fit');
   $('#pager').innerHTML = pagerHtml(true);
-  fitBookTable();
 }
-
-/** ความสูงตารางสมุดคุมคำร้อง = 15 แถวพอดี (เลื่อนดูแถวที่เหลือในตาราง) เปลี่ยนจำนวนที่ BOOK_VISIBLE_ROWS */
-function fitBookTable() {
-  const w = $('.tablewrap.fit');
-  if (!w) return;
-  w.style.maxHeight = '';
-  const th = w.querySelector('thead'), trs = Array.from(w.querySelectorAll('tbody tr'));
-  if (!th) return;
-  if (trs.length <= BOOK_VISIBLE_ROWS) { w.style.maxHeight = 'none'; return; }   // แถวไม่เกิน 15 = แสดงครบ ไม่ต้องเลื่อนในตาราง
-  const h = trs.slice(0, BOOK_VISIBLE_ROWS).reduce((sum, tr) => sum + tr.offsetHeight, th.offsetHeight);
-  w.style.maxHeight = (h + 2) + 'px';
-}
-let fitTimer = 0;
-window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitBookTable, 120); });
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitBookTable());   // วัดใหม่หลังฟอนต์โหลดเสร็จ (ความสูงแถวเปลี่ยน)
-
 
 /** วาดเฉพาะส่วนที่เปลี่ยน (ไม่แตะช่องค้นหา/ตัวกรอง) */
 function renderList() {
