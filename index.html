@@ -740,7 +740,7 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
 
       <div class="fsec">ข้อมูลหน้างาน</div>
       <label>เฟส<select id="f_phase"></select></label>
-      <label>ขนาดมิเตอร์<input type="text" id="f_size" placeholder="เช่น 5(15)" autocomplete="off"></label>
+      <label>ขนาดมิเตอร์<select id="f_size"></select></label>
       <label>เฟสที่เชื่อมต่อ (ด้านเข้า)<select id="f_in"></select></label>
       <label>ขนาดเสา (เมตร)<select id="f_pole"></select></label>
     </div>
@@ -1852,6 +1852,8 @@ function onStatusChange(el) {
    ===================================================================== */
 let formBase = '', closeArmed = 0;
 const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_phase', '#f_size', '#f_in', '#f_pole'];
+const SIZE_OPTS = ['5(15)', '15(45)', '30(100)', '5(100)'];   // ขนาดมิเตอร์ที่เลือกได้ (ค่าเดิมในข้อมูลที่ไม่อยู่ในรายการ จะถูกเพิ่มให้อัตโนมัติตอนแก้ไข)
+
 function formSnap() { return JSON.stringify(FORM_FIELDS.map(k => $(k).value)); }
 
 /** ปิดฟอร์ม: ถ้ามีข้อมูลที่ยังไม่บันทึก ต้องกดปิดซ้ำภายใน 4 วินาทีเพื่อทิ้ง */
@@ -1886,7 +1888,7 @@ async function openForm(id, focus) {
   fillSel('#f_phase', ['1P', '3P', '-'], r && r.phase);
   fillSel('#f_in', ['-', 'A', 'B', 'C'], (r && r.inPhase) || '-');
   fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
-  $('#f_size').value = r && r.size && r.size !== '-' ? r.size : '';
+  fillSel('#f_size', ['', ...SIZE_OPTS], r && r.size && r.size !== '-' ? r.size : '');
   formBase = formSnap();
   $('#modal').hidden = false;
   $('#f_date').focus();
