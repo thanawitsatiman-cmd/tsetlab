@@ -1027,7 +1027,7 @@ function closePop(apply, refocus) {
 
 function onPopChange(t) {
   if (!pop || !t.matches('input[type=checkbox]')) return;
-  if (t.checked) { pop.sel.add(t.value); pop.keep.add(t.value); } else pop.sel.delete(t.value);   // ข้อที่ติ๊กออกยังค้างให้เห็น จะได้ติ๊กกลับได้
+  if (t.checked) { pop.sel.add(t.value); pop.keep.add(t.value); } else { pop.sel.delete(t.value); pop.only = false; }   // ติ๊กออก → แสดงรายการทั้งหมดทันที (ไม่ต้องกด "+ เพิ่ม / เปลี่ยนรายการ")
   updatePopMeta();
 }
 
