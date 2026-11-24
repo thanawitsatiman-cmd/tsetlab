@@ -571,6 +571,7 @@ function reasonLv(x) {
 const lvVar = n => 'var(--lv' + (n || 0) + ')';
 const TCOL   = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
 const PAGE_SIZE = 50, DAILY_PAGE_SIZE = 100;
+const BOOK_VISIBLE_ROWS = 15;   // สมุดคุมคำร้อง: 15 แถวต่อหน้า (ความสูงตารางพอดี 15 แถว)
 const SEARCH_DELAY = 150;        // ms หลังหยุดพิมพ์จึงค้นหา
 const FRESH_MS = 10000;          // ข้อมูลที่โหลดไว้ไม่เกินนี้ ไม่ต้องโหลดซ้ำ
 const POLL_MS = 2000;             // ถามบ่อยเมื่อกำลังใช้งาน
@@ -718,7 +719,7 @@ function requestFor(view) {
     return { key: 'y|' + JSON.stringify(p), name: 'getRequestsPage', args: [p] };
   }
   if (view === 'book') {
-    const b = { year: state.by, month: state.bm, page: state.page, pageSize: PAGE_SIZE, type: state.bt, reason: state.br, status: state.bs, q: state.bq.trim() };
+    const b = { year: state.by, month: state.bm, page: state.page, pageSize: BOOK_VISIBLE_ROWS, type: state.bt, reason: state.br, status: state.bs, q: state.bq.trim() };
     return { key: 'b|' + JSON.stringify(b), name: 'getBookData', args: [b] };
   }
   const p = { page: state.page, pageSize: PAGE_SIZE, year: state.year, month: state.fm, type: state.ft, status: state.fs, q: state.q.trim() };
@@ -1097,9 +1098,11 @@ function tableHtml(rows, emptyMsg, cls) {
     : '<div class="panel empty">' + emptyMsg + '</div>';
 }
 
+/** จำนวนรายการต่อหน้า: สมุดคุมคำร้อง = 15 (ตามจำนวนแถวที่เห็น) หน้าอื่นใช้ PAGE_SIZE */
+const listPageSize = () => (state.view === 'book' ? BOOK_VISIBLE_ROWS : PAGE_SIZE);
 function pagerHtml(withRange) {
   const range = withRange
-    ? 'แสดง ' + (state.total ? state.page * PAGE_SIZE + 1 : 0) + '–' + Math.min((state.page + 1) * PAGE_SIZE, state.total) + ' จาก ' + state.total.toLocaleString('th-TH') + ' · '
+    ? 'แสดง ' + (state.total ? state.page * listPageSize() + 1 : 0) + '–' + Math.min((state.page + 1) * listPageSize(), state.total) + ' จาก ' + state.total.toLocaleString('th-TH') + ' · '
     : '';
   return '<span>' + range + 'หน้า ' + (state.page + 1) + ' / ' + state.pages + '</span>'
     + '<button class="btn" type="button" data-pg="-1"' + (state.page === 0 ? ' disabled' : '') + '>ก่อนหน้า</button>'
@@ -1345,7 +1348,6 @@ function renderBook() {
 }
 
 /** ความสูงตารางสมุดคุมคำร้อง = 15 แถวพอดี (เลื่อนดูแถวที่เหลือในตาราง) เปลี่ยนจำนวนที่ BOOK_VISIBLE_ROWS */
-const BOOK_VISIBLE_ROWS = 15;
 function fitBookTable() {
   const w = $('.tablewrap.fit');
   if (!w) return;
@@ -1358,6 +1360,7 @@ function fitBookTable() {
 }
 let fitTimer = 0;
 window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitBookTable, 120); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitBookTable());   // วัดใหม่หลังฟอนต์โหลดเสร็จ (ความสูงแถวเปลี่ยน)
 
 
 /** วาดเฉพาะส่วนที่เปลี่ยน (ไม่แตะช่องค้นหา/ตัวกรอง) */
