@@ -1461,6 +1461,7 @@ function buildFrame() {
     + '<button class="btn" type="button" data-act="next">›</button><button class="btn" type="button" data-act="today">วันนี้</button></div></div>'
     + '<div class="chips" id="dChips"></div>'
     + '<div class="ctl mb"><input type="search" id="dq" placeholder="ค้นหารายชื่อ ที่อยู่ เบอร์โทร ในวันนี้" value="' + esc(state.dq) + '" style="min-width:280px"></div>'
+    + '<div class="bk-hint">คลิกแถวเพื่อดูรายละเอียดและจัดการคำร้อง</div>'
     + '<div id="tbl"><div class="panel empty">กำลังโหลดคำร้อง…</div></div><div class="pager" id="pager"></div>';
   renderDailyHead();
 }
@@ -1534,7 +1535,7 @@ function renderList() {
     $('#pager').innerHTML = pagerHtml(true);
   } else {
     renderDailyMeta();
-    $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่มีคำร้องในวันที่เลือก');
+    $('#tbl').innerHTML = tableHtml(state.rows, 'ไม่มีคำร้องในวันที่เลือก', 'fit');
     $('#pager').innerHTML = pagerHtml(false);
   }
 }
