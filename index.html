@@ -744,7 +744,6 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
       <label>ขนาดมิเตอร์<input type="text" id="f_size" list="sizes" placeholder="เช่น 5(15)"><datalist id="sizes"><option value="5(15)"><option value="15(45)"><option value="30(100)"><option value="5(100)"></datalist></label>
       <label>เฟสที่เชื่อมต่อ (ด้านเข้า)<select id="f_in"></select></label>
       <label>ขนาดเสา (เมตร)<select id="f_pole"></select></label>
-      <label class="w2">สายจดหน่วย<input type="text" id="f_route"></label>
 
       <label class="w2">หมายเหตุ<textarea id="f_note" rows="2"></textarea></label>
     </div>
@@ -1723,7 +1722,7 @@ function renderDrawer(historyLoading) {
   const typeHtml = types.length ? '<div class="chs">' + types.map(x => '<span class="chp">' + esc(x) + '</span>').join('') + '</div>' : '-';
   const detail = '<div class="kv"><dt>ประเภทคำร้อง</dt><dd>' + typeHtml + '</dd></div>'
     + kv('เฟส · ขนาด', (r.phase || '-') + (r.size && r.size !== '-' ? ' · ' + r.size : ''))
-    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole) + opt('สายจดหน่วย', r.route) + opt('หมายเหตุ', r.note)
+    + opt('เฟสที่เชื่อมต่อ', r.inPhase) + opt('ขนาดเสา', r.pole) + opt('หมายเหตุ', r.note)
     + kv('แหล่งข้อมูล', r.src);
   $('#drawer').innerHTML =
     '<div class="dhead"><div class="dh"><div style="flex:1;min-width:0"><h3>' + esc(r.name || '(ไม่ระบุชื่อ)') + '</h3>'
@@ -1858,7 +1857,7 @@ function onStatusChange(el) {
    10. เพิ่ม / แก้ไข / ลบ
    ===================================================================== */
 let formBase = '', closeArmed = 0;
-const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_status', '#f_phase', '#f_size', '#f_in', '#f_pole', '#f_route', '#f_note'];
+const FORM_FIELDS = ['#f_date', '#f_no', '#f_name', '#f_addr', '#f_phone', '#f_type', '#f_status', '#f_phase', '#f_size', '#f_in', '#f_pole', '#f_note'];
 function formSnap() { return JSON.stringify(FORM_FIELDS.map(k => $(k).value)); }
 
 /** ปิดฟอร์ม: ถ้ามีข้อมูลที่ยังไม่บันทึก ต้องกดปิดซ้ำภายใน 4 วินาทีเพื่อทิ้ง */
@@ -1895,7 +1894,6 @@ async function openForm(id, focus) {
   fillSel('#f_in', ['-', 'A', 'B', 'C'], (r && r.inPhase) || '-');
   fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
   $('#f_size').value = r && r.size && r.size !== '-' ? r.size : '';
-  $('#f_route').value = r ? r.route || '' : '';
   $('#f_note').value = r ? r.note || '' : '';
   formBase = formSnap();
   $('#modal').hidden = false;
@@ -1928,7 +1926,6 @@ async function submitForm(e) {
     size: $('#f_size').value.trim() || '-',
     inPhase: $('#f_in').value,
     pole: $('#f_pole').value,
-    route: $('#f_route').value.trim(),
     note: $('#f_note').value.trim()
   };
   const btn = $('#mSave'), wasEditing = !!editing;
