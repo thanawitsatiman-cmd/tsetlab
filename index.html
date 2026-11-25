@@ -940,6 +940,9 @@ th, td { padding: 9px 10px; }
 .dash .dgrid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px; }
 @media (max-width: 1100px) { .dash .dgrid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .dash .dgrid.three { grid-template-columns: minmax(0, 1fr); } }
+.dash > .dcard { margin-bottom: 16px; }
+.dash .dn.wide .dlg { max-width: 520px; }
+.dash .dgrid.two { margin-bottom: 16px; align-items: stretch; }
 </style>
 </head>
 
@@ -1941,11 +1944,11 @@ function renderDashboard() {
         + '<div class="scroll">' + lineChartSvg(cols, m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
     /* ---- ส่วนที่ 2: รายละเอียดรายเดือน (ตัวเลือกเดือนอยู่ตรงหัวส่วนนี้) ---- */
     + sec('รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง', '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>')
-    + '<div class="dgrid three">'
     + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง', '<div class="hint">เฉพาะ ' + fmtM(m) + ' · 1 คำร้องมีได้หลายประเภท</div>' + donutFull(types, s.monthTotal))
+    + '<div class="dgrid two">'
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
     + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + fmtM(m) + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
-        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', 'one', 'สัดส่วนสถานะการตรวจ'))
+        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', true, 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
     + dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>')
     + '</div>';
