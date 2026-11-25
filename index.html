@@ -951,6 +951,7 @@ th, td { padding: 9px 10px; }
 .dash .fbar .fnote { flex: 1 1 220px; min-width: 0; text-align: right; font-size: 12px; color: var(--muted); }
 .dash .fbar + .sec { margin-top: 18px; }
 @media (max-width: 700px) { .dash .fbar .fnote { text-align: left; flex-basis: 100%; } }
+.dash .fbar select:disabled { opacity: .55; cursor: not-allowed; }
 </style>
 </head>
 
@@ -1217,7 +1218,8 @@ let lastLoad = 0;
 
 function requestFor(view) {
   if (view === 'dashboard') {
-    return { key: 'd|' + state.year + '|' + state.month, name: 'getDashboardData', args: [state.year, state.month] };
+    const mo = state.year ? state.month : 'all';   // ทุกปี = ภาพรวมทุกปีเสมอ ไม่เลือกเดือน
+    return { key: 'd|' + state.year + '|' + mo, name: 'getDashboardData', args: [state.year, mo] };
   }
   if (view === 'daily') {
     const p = { date: state.day, page: state.page, pageSize: DAILY_PAGE_SIZE, q: state.dq.trim() };
@@ -1925,7 +1927,7 @@ function renderDashboard() {
   const allOpt = '<option value="all"' + (allMode ? ' selected' : '') + '>' + (year ? 'ทั้งปี ' + (+year + 543) : 'ทุกเดือน (ทุกปี)') + '</option>';
   const monthOpts = allOpt + (year
     ? Array.from({ length: 12 }, (_, i) => { const k = year + '-' + pad(i + 1), has = monthSet.has(k); return '<option value="' + k + '"' + (!allMode && k === m ? ' selected' : '') + (has ? '' : ' disabled') + '>' + fmtM(k) + (has ? '' : ' (ไม่มีข้อมูล)') + '</option>'; }).reverse().join('')
-    : months.slice().reverse().map(x => '<option value="' + x + '"' + (!allMode && x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join(''));
+    : '');   // ทุกปี: ไม่ให้เลือกเดือน
 
   const allTypes = [...new Set([...typeList(), ...Object.keys(types)])].filter(t => types[t] !== undefined);
   const monthRows = (s.monthSummary || []).filter(x => year ? x.key.startsWith(year) : true);
@@ -1949,8 +1951,8 @@ function renderDashboard() {
   $('#view').innerHTML = '<div class="dash">'
     + '<div class="welcome"><div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p></div></div>'
     + '<div class="fbar"><label class="sub" for="selYearW">ปี</label><select id="selYearW">' + yearOpts + '</select>'
-    + '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>'
-    + '<span class="fnote">ปี ใช้กับทั้งหน้า · เดือน ใช้กับส่วน “รายละเอียด” ด้านล่าง</span></div>'
+    + '<label class="sub" for="selMonth">เดือน</label><select id="selMonth"' + (year ? '' : ' disabled title="เลือกปีก่อน จึงจะเลือกเดือนได้"') + '>' + monthOpts + '</select>'
+    + '<span class="fnote">' + (year ? 'ปี ใช้กับทั้งหน้า · เดือน ใช้กับส่วน “รายละเอียด” ด้านล่าง' : 'ทุกปี = แสดงข้อมูลรวมทุกปี · เลือกปีเพื่อดูรายเดือน') + '</span></div>'
     /* ---- ส่วนที่ 1: ภาพรวมตามปี (ตัวเลือกปีอยู่ตรงหัวส่วนนี้) ---- */
     + sec('ภาพรวม · ' + scope, N(s.total) + ' คำร้อง')
     + '<div class="kpis">' + kpis + '</div>'
@@ -2528,7 +2530,7 @@ document.addEventListener('click', e => {
   }
   if ((el = t.closest('[data-by]'))) { state.by = el.dataset.by; state.bm = 'auto'; state.bd = ''; state.page = 0; loadView(); return; }
   if ((el = t.closest('[data-bm]'))) { state.bm = el.dataset.bm; state.bd = ''; state.page = 0; loadView(); return; }
-  if ((el = t.closest('[data-month]'))) { state.month = el.dataset.month; loadView(); return; }
+  if ((el = t.closest('[data-month]'))) { state.month = el.dataset.month; if (!state.year) state.year = state.month.slice(0, 4); loadView(); return; }
   if ((el = t.closest('[data-y]'))) { state.year = el.dataset.y; state.month = ''; loadView(); return; }
   if ((el = t.closest('[data-day]'))) { state.day = el.dataset.day; location.hash = 'daily'; return; }
   if (t.closest('.dback, [data-close]')) { closeDrawer(); return; }
