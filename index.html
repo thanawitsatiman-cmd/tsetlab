@@ -908,6 +908,9 @@ th, td { padding: 9px 10px; }
 .dash .dn svg circle[r="48"] { fill: var(--surface); }
 .dash .dlg { width: 100%; flex: none; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
 
+/* คำอธิบายโดนัทแบบแนวตั้ง 1 คอลัมน์ (การ์ดแคบ เช่น สถานะการตรวจ) */
+.dash .dn.one .dlg { grid-template-columns: minmax(0, 1fr); }
+.dlg b em { font-style: normal; font-weight: 400; color: var(--muted); }
 /* โดนัทแยกตามประเภท (การ์ดซ้าย): วงซ้าย คำอธิบายขวา */
 .dash .dn.wide { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px 24px; padding: 4px 0 0; }
 .dash .dn.wide .dlg { display: flex; flex-direction: column; flex: 1 1 200px; width: auto; min-width: 190px; gap: 9px; }
@@ -1808,7 +1811,7 @@ function donutGen(items, centerNum, cap, wide, label) {
     + '<circle cx="90" cy="90" r="48" fill="var(--surface)"/>'
     + '<text class="num" x="90" y="92" text-anchor="middle">' + Number(centerNum || 0).toLocaleString('th-TH') + '</text><text class="cap" x="90" y="110" text-anchor="middle">' + esc(cap || '') + '</text></svg>';
   const lg = items.map(it => '<div><i style="background:' + it.c + '"></i><span title="' + esc(it.tip || it.name) + '">' + esc(it.name) + '</span><b>' + it.v + ' <em>· ' + Math.round(it.v / sum * 100) + '%</em></b></div>').join('');
-  return '<div class="dn' + (wide ? ' wide' : '') + '">' + svg + '<div class="dlg">' + lg + '</div></div>';
+  return '<div class="dn' + (wide === 'one' ? ' one' : wide ? ' wide' : '') + '">' + svg + '<div class="dlg">' + lg + '</div></div>';
 }
 
 /** แยกตามประเภทคำร้อง: 6 ประเภทมากสุดมีสีของตัวเอง ที่เหลือรวมเป็น "อื่น ๆ" */
@@ -1931,7 +1934,7 @@ function renderDashboard() {
     + '<div class="dright">'
     + dcard(ICO_CAL, 'สรุปรายเดือน', '<div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div><div class="mlist">' + mlist + '</div>')
     + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + fmtM(m) + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
-        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', false, 'สัดส่วนสถานะการตรวจ'))
+        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', 'one', 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
     + '</div>'
 
