@@ -1968,7 +1968,9 @@ function renderDashboard() {
         + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', true, 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
     + (allMode
-      ? dcard(ICO_CAL, 'จำนวนคำร้องรายเดือน · ' + (year ? scope : '12 เดือนล่าสุด'), '<div class="hint">คลิกแท่งเพื่อดูรายละเอียดของเดือนนั้น</div><div class="scroll">' + barsSvg(have.map(c => ({ k: c.k, label: c.label, c: c.t, title: c.title })), 'data-month', 'จำนวนคำร้องรายเดือน') + '</div>')
+      ? (year
+        ? dcard(ICO_CAL, 'จำนวนคำร้องรายเดือน · ' + (year ? scope : '12 เดือนล่าสุด'), '<div class="hint">คลิกแท่งเพื่อดูรายละเอียดของเดือนนั้น</div><div class="scroll">' + barsSvg(have.map(c => ({ k: c.k, label: c.label, c: c.t, title: c.title })), 'data-month', 'จำนวนคำร้องรายเดือน') + '</div>')
+        : dcard(ICO_CAL, 'จำนวนคำร้องรายปี', '<div class="hint">คลิกแท่งเพื่อดูรายละเอียดของปีนั้น · รวมทุกปี ' + N(s.total) + ' คำร้อง</div><div class="scroll">' + barsSvg((s.yearSummary || []).map(y => ({ k: y.key, label: String(+y.key + 543), c: y.total, title: 'ปี ' + (+y.key + 543) + ' · ' + y.total + ' คำร้อง' })), 'data-y', 'จำนวนคำร้องรายปี') + '</div>'))
       : dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>'))
     + '</div>';
 }
