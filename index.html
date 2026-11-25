@@ -943,6 +943,9 @@ th, td { padding: 9px 10px; }
 .dash > .dcard { margin-bottom: 16px; }
 .dash .dn.wide .dlg { max-width: 520px; }
 .dash .dgrid.two { margin-bottom: 16px; align-items: stretch; }
+.dash .tgrid { column-count: 2; column-gap: 40px; }
+.dash .tgrid .bl { break-inside: avoid; }
+@media (max-width: 700px) { .dash .tgrid { column-count: 1; } }
 </style>
 </head>
 
@@ -1944,7 +1947,7 @@ function renderDashboard() {
         + '<div class="scroll">' + lineChartSvg(cols, m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
     /* ---- ส่วนที่ 2: รายละเอียดรายเดือน (ตัวเลือกเดือนอยู่ตรงหัวส่วนนี้) ---- */
     + sec('รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง', '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>')
-    + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง', '<div class="hint">เฉพาะ ' + fmtM(m) + ' · 1 คำร้องมีได้หลายประเภท</div>' + donutFull(types, s.monthTotal))
+    + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง · ' + Object.keys(types).length + ' ประเภท', '<div class="hint">ทุกประเภทของ ' + fmtM(m) + ' · % คิดจากจำนวนคำร้องของเดือน (1 คำร้องมีได้หลายประเภท)</div>' + '<div class="tgrid">' + barList(types, () => 'var(--c1)', s.monthTotal) + '</div>')
     + '<div class="dgrid two">'
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
     + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + fmtM(m) + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
