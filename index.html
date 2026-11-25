@@ -946,6 +946,11 @@ th, td { padding: 9px 10px; }
 .dash .tgrid { column-count: 2; column-gap: 40px; }
 .dash .tgrid .bl { break-inside: avoid; }
 @media (max-width: 700px) { .dash .tgrid { column-count: 1; } }
+.dash .fbar { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.dash .fbar select { border-radius: 999px; background-color: var(--surface2); border: 1px solid var(--line); padding-inline: 14px; }
+.dash .fbar .fnote { flex: 1 1 220px; min-width: 0; text-align: right; font-size: 12px; color: var(--muted); }
+.dash .fbar + .sec { margin-top: 18px; }
+@media (max-width: 700px) { .dash .fbar .fnote { text-align: left; flex-basis: 100%; } }
 </style>
 </head>
 
@@ -1940,17 +1945,20 @@ function renderDashboard() {
       + '<div class="mnm"><b>' + N(x.total) + '</b><small class="' + (x.open ? 'wn' : 'ok') + '">' + (x.open ? 'ค้าง ' + N(x.open) : 'ไม่มีค้าง') + '</small></div></div>';
   }).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
 
-  const sec = (title, sub, ctl) => '<div class="sec"><div><h3>' + title + '</h3><p class="ssub">' + sub + '</p></div><span class="sp"></span><div class="ctl">' + ctl + '</div></div>';
+  const sec = (title, sub, ctl) => '<div class="sec"><div><h3>' + title + '</h3><p class="ssub">' + sub + '</p></div>' + (ctl ? '<span class="sp"></span><div class="ctl">' + ctl + '</div>' : '') + '</div>';
   $('#view').innerHTML = '<div class="dash">'
     + '<div class="welcome"><div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p></div></div>'
+    + '<div class="fbar"><label class="sub" for="selYearW">ปี</label><select id="selYearW">' + yearOpts + '</select>'
+    + '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>'
+    + '<span class="fnote">ปี ใช้กับทั้งหน้า · เดือน ใช้กับส่วน “รายละเอียด” ด้านล่าง</span></div>'
     /* ---- ส่วนที่ 1: ภาพรวมตามปี (ตัวเลือกปีอยู่ตรงหัวส่วนนี้) ---- */
-    + sec('ภาพรวม · ' + scope, N(s.total) + ' คำร้อง', '<label class="sub" for="selYearW">ปี</label><select id="selYearW">' + yearOpts + '</select>')
+    + sec('ภาพรวม · ' + scope, N(s.total) + ' คำร้อง')
     + '<div class="kpis">' + kpis + '</div>'
     + dcard(ICO_BAR, 'สถิติคำร้องรายเดือน',
         '<div class="lgd"><span><i style="background:var(--c1)"></i>คำร้องทั้งหมด</span><span><i style="background:color-mix(in srgb,var(--c1) 42%,var(--surface))"></i>ตรวจแล้ว</span></div>'
         + '<div class="scroll">' + lineChartSvg(cols, allMode ? '' : m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
     /* ---- ส่วนที่ 2: รายละเอียดรายเดือน (ตัวเลือกเดือนอยู่ตรงหัวส่วนนี้) ---- */
-    + sec(allMode ? 'รายละเอียด · ' + scopeTxt + ' (ทั้งหมด)' : 'รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง', '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>')
+    + sec(allMode ? 'รายละเอียด · ' + scopeTxt + ' (ทั้งหมด)' : 'รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง')
     + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง · ' + Object.keys(types).length + ' ประเภท', '<div class="hint">ทุกประเภทของ ' + mLbl + ' · % คิดจากจำนวนคำร้อง (1 คำร้องมีได้หลายประเภท)</div>' + '<div class="tgrid">' + barList(types, () => 'var(--c1)', s.monthTotal) + '</div>')
     + '<div class="dgrid two">'
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
