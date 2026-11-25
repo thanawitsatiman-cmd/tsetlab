@@ -854,6 +854,74 @@ th, td { padding: 9px 10px; }
   .welcome h2 { font-size: 21px; }
   .welcome .bld { width: 112px; }
 }
+
+/* =====================================================================
+   หน้า Dashboard (เลย์เอาต์ใหม่ แบบการ์ดมน + คอลัมน์ขวา)
+   ครอบด้วย .dash ทั้งหมด จึงไม่กระทบหน้าอื่น / ใช้ตัวแปรสีเดิมทั้งหมด
+   ===================================================================== */
+.dash .welcome { margin-bottom: 16px; }
+.dash .welcome h2 { font-size: 22px; }
+.dash .welcome select { border-radius: 999px; background-color: var(--surface); border: 1px solid var(--line); padding-inline: 14px; }
+
+.dash .dmain { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+.dash .dleft, .dash .dright { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.dash .dleft .kpis, .dash .dleft .dgrid { margin: 0; }
+.dash .dcard.mb { margin: 16px 0 0; }
+
+/* การ์ดทุกใบ: หัวเรียบ ไม่มีแถบสี */
+.dash .dcard { border-radius: 18px; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--surface); }
+.dash .dch { background: none; color: var(--ink); padding: 16px 20px 0; font-size: 15px; font-weight: 700; }
+.dash .dch svg { width: 18px; height: 18px; color: var(--accent); }
+.dash .dch select { background-color: var(--surface2); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; min-height: 30px; font-size: 12.5px; font-weight: 600; }
+.dash .dcb { padding: 10px 20px 18px; }
+.dash .dcb .hint { margin-bottom: 10px; }
+.dash .lgd { justify-content: flex-start; margin-bottom: 4px; }
+
+/* การ์ดตัวเลข 4 ใบ */
+.dash .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
+.dash .kc { display: block; padding: 16px 18px 14px; min-height: 116px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.dash .kc .ic { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; background: color-mix(in srgb, var(--kc) 14%, var(--surface)); color: var(--kc); box-shadow: none; }
+.dash .kc .ic svg { width: 16px; height: 16px; }
+.dash .kc .tx { display: flex; flex-direction: column; }
+.dash .kc .l { font-size: 13px; font-weight: 500; color: var(--muted); padding-right: 36px; }
+.dash .kc .v { font-size: 28px; margin-top: 4px; }
+.dash .kc .tr { margin-top: 2px; }
+.dash .kc .spk { width: 44%; height: 34px; opacity: .5; }
+
+/* รายการสรุปรายเดือน */
+.dash .mlist { display: flex; flex-direction: column; max-height: 330px; overflow: auto; margin-right: -6px; padding-right: 6px; }
+.dash .mrow { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.dash .mrow:last-child { border-bottom: 0; }
+.dash .mav { flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.dash .mtx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.dash .mtx b { font-size: 13.5px; font-weight: 600; }
+.dash .mtx small, .dash .mnm small { font-size: 11.5px; color: var(--muted); }
+.dash .mtx small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash .mnm { flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+.dash .mnm b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.dash .mnm small.wn { color: var(--warn); font-weight: 600; }
+.dash .mnm small.ok { color: var(--good); }
+
+/* โดนัท: วงอยู่กลาง คำอธิบายเป็น 2 คอลัมน์ด้านล่าง */
+.dash .dn { flex-direction: column; gap: 14px; padding: 2px 0 0; }
+.dash .dn svg { width: 170px; height: 170px; }
+.dash .dn svg circle[r="48"] { fill: var(--surface); }
+.dash .dlg { width: 100%; flex: none; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+
+/* แถบสัดส่วน: ชื่อ + ตัวเลขบรรทัดบน แถบเต็มความกว้างบรรทัดล่าง (แบบกล่อง Goals) */
+.dash .bl { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "n v" "t t"; gap: 6px 10px; padding: 7px 0; }
+.dash .bl-n { grid-area: n; font-size: 13px; }
+.dash .bl-v { grid-area: v; }
+.dash .bl-t { grid-area: t; height: 8px; }
+
+@media (max-width: 1100px) {
+  .dash .dmain { grid-template-columns: minmax(0, 1fr); }
+  .dash .dright { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}
+@media (max-width: 700px) {
+  .dash .dright, .dash .dgrid.two { grid-template-columns: minmax(0, 1fr); }
+  .dash .kpis { gap: 12px; }
+}
 </style>
 </head>
 
@@ -1795,34 +1863,44 @@ function renderDashboard() {
     + '<td class="n">' + x.open + '</td></tr>').join('');
   const mcol = { 'ธรรมดา': 'var(--c2)', 'TOU': 'var(--c3)', 'EV': 'var(--c4)', '1P': 'var(--c1)', '3P': 'var(--c5)' };
 
-  $('#view').innerHTML =
-    '<div class="welcome">' + BUILDING_SVG
-    + '<div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p>'
+  /* ---- รายการสรุปรายเดือน (แบบรายการ เหมือนกล่อง Recent Transaction) ---- */
+  const recent = monthRows.slice(year ? 0 : -6).reverse();
+  const mlist = recent.length ? recent.map(x => {
+    const tp = allTypes.filter(t => x.types[t]).map(t => esc(t) + ' ' + x.types[t]).join(' · ');
+    return '<div class="mrow"><span class="mav">' + esc(shortM(x.key)) + '</span>'
+      + '<div class="mtx"><b>' + esc(fmtM(x.key)) + '</b><small>' + (tp || '—') + '</small></div>'
+      + '<div class="mnm"><b>' + N(x.total) + '</b><small class="' + (x.open ? 'wn' : 'ok') + '">' + (x.open ? 'ค้าง ' + N(x.open) : 'ไม่มีค้าง') + '</small></div></div>';
+  }).join('') : '<div class="empty">ไม่มีข้อมูล</div>';
+
+  $('#view').innerHTML = '<div class="dash">'
+    + '<div class="welcome"><div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p>'
     + '<p class="wsub2">' + (year ? 'ปี พ.ศ. ' + (+year + 543) : 'ทุกปี') + ' · ' + N(s.total) + ' รายการ · แสดงรายละเอียดของ ' + fmtM(m) + '</p></div>'
     + '<div class="ctl"><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
 
+    + '<div class="dmain">'
+    /* ---- คอลัมน์ซ้าย: ตัวเลข > กราฟใหญ่ > การ์ดเล็ก 2 ใบ ---- */
+    + '<div class="dleft">'
     + '<div class="kpis">' + kpis + '</div>'
-
-    + '<div class="dgrid">'
     + dcard(ICO_BAR, 'สถิติคำร้องรายเดือน',
         '<div class="lgd"><span><i style="background:var(--c1)"></i>คำร้องทั้งหมด</span><span><i style="background:color-mix(in srgb,var(--c1) 42%,var(--surface))"></i>ตรวจแล้ว</span></div>'
         + '<div class="scroll">' + lineChartSvg(cols, m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>',
         '<select id="selYearD" aria-label="เลือกปี">' + yearOpts + '</select>')
-    + dcard(ICO_PIE, 'ประเภทคำร้อง Top 4',
-        '<div class="hint">' + fmtM(m) + ' · เรียงตามจำนวนคำร้องมากที่สุด 4 อันดับแรก ที่เหลือรวมเป็น "อื่น ๆ"</div>' + donutHtml(types, s.monthTotal))
-    + '</div>'
-
-    + dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>', '', 'mb')
-
     + '<div class="dgrid two">'
     + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง', '<div class="hint">เฉพาะ ' + fmtM(m) + '</div>' + barList(types, k => TCOL[typeIdx(k)], s.monthTotal))
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + barList(s.phases, k => mcol[k] || 'var(--c6)', sumOf(s.phases)))
     + '</div>'
+    + '</div>'
+    /* ---- คอลัมน์ขวา: รายการสรุปรายเดือน > โดนัทประเภทคำร้อง ---- */
+    + '<div class="dright">'
+    + dcard(ICO_CAL, 'สรุปรายเดือน', '<div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div><div class="mlist">' + mlist + '</div>')
+    + dcard(ICO_PIE, 'ประเภทคำร้อง Top 4',
+        '<div class="hint">' + fmtM(m) + ' · เรียงตามจำนวนคำร้องมากที่สุด 4 อันดับแรก ที่เหลือรวมเป็น "อื่น ๆ"</div>' + donutHtml(types, s.monthTotal))
+    + '</div>'
+    + '</div>'
 
-    + dcard(ICO_CAL, 'สรุปรายเดือน',
-        '<div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div>'
-        + '<div class="scroll"><table><thead><tr><th>เดือน</th><th class="n">รวม</th>'
-        + allTypes.map(t => '<th class="n">' + esc(t) + '</th>').join('') + '<th class="n">ค้าง</th></tr></thead><tbody>' + tbl + '</tbody></table></div>');
+    /* ---- แถวล่างเต็มความกว้าง: รายวัน ---- */
+    + dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>', '', 'mb')
+    + '</div>';
 }
 
 /* =====================================================================
