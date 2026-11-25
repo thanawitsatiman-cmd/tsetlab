@@ -774,6 +774,58 @@ main { max-width: 1400px; padding-top: 22px; }
 .dlg span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dlg b { font-weight: 600; font-variant-numeric: tabular-nums; }
 
+
+/* ---- ปรับขนาดให้กะทัดรัดขึ้น ---- */
+body { font-size: 14px; }
+.shell { grid-template-columns: 218px minmax(0, 1fr); }
+.side { gap: 14px; padding-left: 12px; padding-right: 12px; }
+.side .brand { padding: 8px 10px; border-radius: 12px; }
+.side .brand h1 { font-size: 14.5px; }
+.side .brand p { font-size: 10.5px; }
+.side .mark { width: 34px; height: 34px; }
+.side nav { padding-top: 12px; }
+nav a { padding: 8px 11px; font-size: 13.5px; gap: 10px; border-radius: 10px; }
+nav a svg { width: 17px; height: 17px; }
+nav .kids a { font-size: 12.5px; padding: 7px 8px; white-space: nowrap; }
+nav .kids { margin-left: 18px; }
+nav .trow a { padding-right: 34px; font-size: 13px; }
+.bar-in { padding-block: 7px; gap: 10px; }
+.navbtn { width: 36px; height: 36px; }
+.bar .btn { min-height: 34px; padding: 5px 12px; font-size: 13px; }
+.today-chip { font-size: 12.5px; }
+.uav { width: 34px; height: 34px; }
+.bar .who b { font-size: 13px; }
+.bar .who .rolechip { font-size: 11px; }
+.btn.icon { width: 34px; min-height: 34px; }
+main { padding-top: 16px; padding-bottom: 32px; }
+.welcome { gap: 14px; margin-bottom: 14px; }
+.welcome .bld { width: 118px; }
+.welcome h2 { font-size: 21px; }
+.welcome .wsub { font-size: 13px; }
+.welcome .wsub2 { font-size: 11.5px; margin-top: 3px; }
+.welcome select { min-height: 32px; padding: 3px 10px; font-size: 13px; }
+.kpis { gap: 12px; margin-bottom: 14px; }
+.kc { padding: 12px 12px; gap: 11px; border-radius: 13px; }
+.kc .ic { width: 44px; height: 44px; }
+.kc .ic svg { width: 22px; height: 22px; }
+.kc .l { font-size: 12.5px; }
+.kc .v { font-size: 25px; }
+.kc .tr { font-size: 11.5px; }
+.kc .tr small { font-size: 10.5px; }
+.kc .spk { height: 38px; }
+.dgrid { gap: 12px; margin-bottom: 12px; }
+.dcard { border-radius: 13px; }
+.dcard.mb { margin-bottom: 12px; }
+.dch { padding: 9px 14px; font-size: 14px; gap: 8px; }
+.dch svg { width: 17px; height: 17px; }
+.dch select { min-height: 28px; padding: 2px 26px 2px 11px; font-size: 12.5px; border-radius: 8px; }
+.dcb { padding: 10px 14px 14px; }
+.dcb .hint, .lgd { font-size: 11.5px; }
+.dn svg { width: 150px; height: 150px; }
+.dn .num { font-size: 24px; }
+.dlg { gap: 8px; } .dlg > div { font-size: 12.5px; }
+.panel h3, th, td { font-size: 12.5px; }
+th, td { padding: 9px 10px; }
 @media (max-width: 900px) { .dgrid, .dgrid.two { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 820px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
