@@ -1892,7 +1892,10 @@ function renderDashboard() {
 
   const yearOpts = '<option value=""' + (year ? '' : ' selected') + '>ทุกปี</option>'
     + (state.years || []).slice().reverse().map(y => '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>ปี ' + (+y + 543) + '</option>').join('');
-  const monthOpts = months.slice().reverse().map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
+  const monthSet = new Set(months);
+  const monthOpts = year
+    ? Array.from({ length: 12 }, (_, i) => { const k = year + '-' + pad(i + 1), has = monthSet.has(k); return '<option value="' + k + '"' + (k === m ? ' selected' : '') + (has ? '' : ' disabled') + '>' + fmtM(k) + (has ? '' : ' (ไม่มีข้อมูล)') + '</option>'; }).reverse().join('')
+    : months.slice().reverse().map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
 
   const allTypes = [...new Set([...typeList(), ...Object.keys(types)])].filter(t => types[t] !== undefined);
   const monthRows = (s.monthSummary || []).filter(x => year ? x.key.startsWith(year) : true);
@@ -1915,7 +1918,7 @@ function renderDashboard() {
   $('#view').innerHTML = '<div class="dash">'
     + '<div class="welcome"><div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p>'
     + '<p class="wsub2">' + (year ? 'ปี พ.ศ. ' + (+year + 543) : 'ทุกปี') + ' · ' + N(s.total) + ' รายการ · แสดงรายละเอียดของ ' + fmtM(m) + '</p></div>'
-    + '<div class="ctl"><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
+    + '<div class="ctl"><label class="sub" for="selYearW">ปี</label><select id="selYearW">' + yearOpts + '</select><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
 
     + '<div class="dmain">'
     /* ---- คอลัมน์ซ้าย: ตัวเลข > กราฟใหญ่ > การ์ดเล็ก 2 ใบ ---- */
@@ -2513,7 +2516,7 @@ document.addEventListener('change', e => {
   if (t.closest('#mpop')) { onPopChange(t); return; }
   switch (t.id) {
     case 'selMonth': state.month = t.value; loadView(); break;
-    case 'selYear': case 'selYearD': state.year = t.value; state.fm = ''; state.page = 0; loadView(); break;
+    case 'selYear': case 'selYearD': case 'selYearW': state.year = t.value; state.fm = ''; state.month = ''; state.page = 0; loadView(); break;
     case 'fm': state.fm = t.value; state.page = 0; loadView(); break;
     case 'ft': state.ft = t.value; state.page = 0; loadView(); break;
     case 'fs': state.fs = t.value; state.page = 0; loadView(); break;
