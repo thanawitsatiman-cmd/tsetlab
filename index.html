@@ -1094,7 +1094,8 @@ const sleep     = ms => new Promise(r => setTimeout(r, ms));
    ===================================================================== */
 const state = {
   view: 'dashboard', canWrite: false, canDelete: false, me: null,
-  year: '', month: '', day: TODAY,            // ตัวกรองปี / เดือนของภาพรวม / วันของหน้ารายวัน
+  year: String(new Date().getFullYear()), month: '', day: TODAY,   // เริ่มที่ปีปัจจุบัน (ถ้าไม่มีข้อมูลปีนี้ จะถอยไปปีล่าสุดที่มีข้อมูลอัตโนมัติ)
+             // ตัวกรองปี / เดือนของภาพรวม / วันของหน้ารายวัน
   q: '', dq: '', ft: '', fs: '', fm: '', page: 0,   // ค้นหา + ตัวกรองของหน้ารายการ
   rows: [], total: 0, pages: 1, openCount: 0, typeCounts: {}, types: [], reasons: [], typeOpts: [], reasonOpts: [], months: [], years: [],
   summary: null, detail: null, detailData: null, frame: '',
@@ -1281,6 +1282,10 @@ function showData(view, data) {
     return;
   }
   if (view === 'dashboard') {
+    if (state.year && data.years && !data.years.includes(state.year)) {   // ปีที่เลือกไม่มีข้อมูล → ใช้ปีล่าสุดที่มี
+      state.year = data.years[data.years.length - 1] || ''; state.month = '';
+      loadView(); return;
+    }
     state.summary = data;
     state.month = data.month;
     renderDashboard();
