@@ -1302,7 +1302,7 @@ function showData(view, data) {
       loadView(); return;
     }
     state.summary = data;
-    state.month = data.month;
+    state.month = data.all ? 'all' : data.month;
     renderDashboard();
     return;
   }
@@ -1871,6 +1871,9 @@ function renderDashboard() {
   if (!s) return;
   state.frame = 'dashboard';
   const m = s.month, months = s.months || [], year = state.year, types = s.types || {};
+  const allMode = !!s.all;                       // true = ดูทั้งปี/ทุกปี ไม่ใช่เดือนเดียว
+  const scopeTxt = year ? 'ปี ' + (+year + 543) : 'ทุกปี';
+  const mLbl = allMode ? scopeTxt : fmtM(m);
   const sumOf = o => Object.values(o || {}).reduce((a, b) => a + b, 0);
   const shortM = k => pkey(k + '-01').toLocaleDateString('th-TH', { month: 'short' });
   const N = v => (v || 0).toLocaleString('th-TH');
@@ -1901,7 +1904,7 @@ function renderDashboard() {
   if (s.previousMonthTotal) {
     const p = Math.round((s.monthTotal - s.previousMonthTotal) / s.previousMonthTotal * 100);
     t1 = '<div class="tr' + (p < 0 ? ' dn' : '') + '" title="จำนวนคำร้องของ ' + esc(fmtM(m)) + ' เทียบกับเดือนก่อนหน้า">' + esc(shortM(m)) + ' ' + N(s.monthTotal) + ' · ' + arrow(p) + ' ' + (p > 0 ? '+' : '') + p + '%<small>เทียบเดือนก่อน</small></div>';
-  } else t1 = '<div class="tr mu">เดือนนี้ ' + N(s.monthTotal) + ' รายการ</div>';
+  } else t1 = allMode ? '<div class="tr mu">' + N(have.length) + ' เดือนที่มีข้อมูล</div>' : '<div class="tr mu">เดือนนี้ ' + N(s.monthTotal) + ' รายการ</div>';
   const dd = s.today - s.yesterday;
   const t4 = '<div class="tr' + (dd < 0 ? ' dn' : dd === 0 ? ' mu' : '') + '" title="เมื่อวานมี ' + s.yesterday + ' รายการ">' + arrow(dd) + ' ' + (dd === 0 ? 'เท่าเมื่อวาน' : Math.abs(dd) + '<small>เทียบเมื่อวาน</small>') + '</div>';
 
@@ -1914,9 +1917,10 @@ function renderDashboard() {
   const yearOpts = '<option value=""' + (year ? '' : ' selected') + '>ทุกปี</option>'
     + (state.years || []).slice().reverse().map(y => '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>ปี ' + (+y + 543) + '</option>').join('');
   const monthSet = new Set(months);
-  const monthOpts = year
-    ? Array.from({ length: 12 }, (_, i) => { const k = year + '-' + pad(i + 1), has = monthSet.has(k); return '<option value="' + k + '"' + (k === m ? ' selected' : '') + (has ? '' : ' disabled') + '>' + fmtM(k) + (has ? '' : ' (ไม่มีข้อมูล)') + '</option>'; }).reverse().join('')
-    : months.slice().reverse().map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
+  const allOpt = '<option value="all"' + (allMode ? ' selected' : '') + '>' + (year ? 'ทั้งปี ' + (+year + 543) : 'ทุกเดือน (ทุกปี)') + '</option>';
+  const monthOpts = allOpt + (year
+    ? Array.from({ length: 12 }, (_, i) => { const k = year + '-' + pad(i + 1), has = monthSet.has(k); return '<option value="' + k + '"' + (!allMode && k === m ? ' selected' : '') + (has ? '' : ' disabled') + '>' + fmtM(k) + (has ? '' : ' (ไม่มีข้อมูล)') + '</option>'; }).reverse().join('')
+    : months.slice().reverse().map(x => '<option value="' + x + '"' + (!allMode && x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join(''));
 
   const allTypes = [...new Set([...typeList(), ...Object.keys(types)])].filter(t => types[t] !== undefined);
   const monthRows = (s.monthSummary || []).filter(x => year ? x.key.startsWith(year) : true);
@@ -1944,16 +1948,18 @@ function renderDashboard() {
     + '<div class="kpis">' + kpis + '</div>'
     + dcard(ICO_BAR, 'สถิติคำร้องรายเดือน',
         '<div class="lgd"><span><i style="background:var(--c1)"></i>คำร้องทั้งหมด</span><span><i style="background:color-mix(in srgb,var(--c1) 42%,var(--surface))"></i>ตรวจแล้ว</span></div>'
-        + '<div class="scroll">' + lineChartSvg(cols, m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
+        + '<div class="scroll">' + lineChartSvg(cols, allMode ? '' : m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
     /* ---- ส่วนที่ 2: รายละเอียดรายเดือน (ตัวเลือกเดือนอยู่ตรงหัวส่วนนี้) ---- */
-    + sec('รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง', '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>')
-    + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง · ' + Object.keys(types).length + ' ประเภท', '<div class="hint">ทุกประเภทของ ' + fmtM(m) + ' · % คิดจากจำนวนคำร้องของเดือน (1 คำร้องมีได้หลายประเภท)</div>' + '<div class="tgrid">' + barList(types, () => 'var(--c1)', s.monthTotal) + '</div>')
+    + sec(allMode ? 'รายละเอียด · ' + scopeTxt + ' (ทั้งหมด)' : 'รายละเอียดเดือน ' + fmtM(m), N(s.monthTotal) + ' คำร้อง', '<label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select>')
+    + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง · ' + Object.keys(types).length + ' ประเภท', '<div class="hint">ทุกประเภทของ ' + mLbl + ' · % คิดจากจำนวนคำร้อง (1 คำร้องมีได้หลายประเภท)</div>' + '<div class="tgrid">' + barList(types, () => 'var(--c1)', s.monthTotal) + '</div>')
     + '<div class="dgrid two">'
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
-    + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + fmtM(m) + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
+    + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + mLbl + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
         + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', true, 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
-    + dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>')
+    + (allMode
+      ? dcard(ICO_CAL, 'จำนวนคำร้องรายเดือน · ' + (year ? scope : '12 เดือนล่าสุด'), '<div class="hint">คลิกแท่งเพื่อดูรายละเอียดของเดือนนั้น</div><div class="scroll">' + barsSvg(have.map(c => ({ k: c.k, label: c.label, c: c.t, title: c.title })), 'data-month', 'จำนวนคำร้องรายเดือน') + '</div>')
+      : dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>'))
     + '</div>';
 }
 
