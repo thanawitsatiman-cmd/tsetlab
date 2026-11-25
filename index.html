@@ -664,6 +664,142 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
   .bk-months { gap: 6px; }
   .tablewrap tbody tr { padding: 10px 12px; }
 }
+
+/* =====================================================================
+   ธีม PEA: เมนูม่วง + แถบบนสีขาว + การ์ดภาพรวมแบบแดชบอร์ด
+   ===================================================================== */
+:root { --pea-1: #4a1f7a; --pea-2: #5d2f93; --pea-3: #7243aa; --bg: #f3f0f8; }
+
+/* ---- เมนูด้านข้าง (สีม่วงไล่เฉด) ---- */
+.shell { grid-template-columns: 252px minmax(0, 1fr); }
+.shell.nav-off { grid-template-columns: minmax(0, 1fr); }
+.shell.nav-off .side { display: none; }
+.side {
+  background: linear-gradient(180deg, var(--pea-1) 0%, var(--pea-2) 58%, var(--pea-3) 100%);
+  border-right: 0; color: #fff; gap: 18px;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 14px 18px max(14px, env(safe-area-inset-left, 0px));
+}
+.side .brand { background: #fff; border-radius: 14px; padding: 11px 12px; box-shadow: 0 6px 16px rgba(20, 6, 42, .28); }
+.side .brand h1 { color: var(--pea-1); font-size: 16px; font-weight: 700; }
+.side .brand p { color: #7b6c92; font-size: 11.5px; }
+.side .mark { width: 42px; height: 42px; }
+.side nav { border-top: 1px solid rgba(255, 255, 255, .2); padding-top: 16px; }
+nav a { color: rgba(255, 255, 255, .92); font-weight: 500; }
+nav a:hover { background: rgba(255, 255, 255, .13); color: #fff; }
+nav a[aria-current="page"], nav a[aria-current="page"]:hover {
+  background: rgba(255, 255, 255, .26); color: #fff; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
+}
+nav .tog:hover { background: rgba(255, 255, 255, .16); }
+nav .kids { border-left-color: rgba(255, 255, 255, .3); }
+nav a .cnt { background: #fff; color: var(--pea-1); }
+nav a .cnt.zero { background: rgba(255, 255, 255, .2); color: #fff; }
+nav a[aria-current="page"] .cnt.zero { background: rgba(255, 255, 255, .24); }
+.side :focus-visible { outline-color: #fff; }
+
+/* ---- แถบบน ---- */
+.bar { background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: none; padding-block: 10px; gap: 12px; }
+.navbtn { flex: none; width: 42px; height: 42px; border: 0; border-radius: 10px; background: none; color: var(--accent); cursor: pointer; display: grid; place-items: center; }
+.navbtn:hover { background: var(--accent-soft); }
+.today-chip { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+.today-chip svg { color: var(--accent); flex: none; }
+.bar .vsep { width: 1px; height: 32px; background: var(--line); }
+.bar .who { display: flex; align-items: center; gap: 10px; width: auto; margin: 0; padding: 0; background: none; min-width: 0; }
+.bar .who > div.wtxt { display: flex; flex-direction: column; gap: 0; line-height: 1.3; min-width: 0; }
+.bar .who b { font-size: 14px; font-weight: 600; max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .who .rolechip { background: none; padding: 0; color: var(--muted); font-size: 12px; }
+.uav { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--pea-2); color: #fff; display: grid; place-items: center; }
+.btn.icon { padding: 0; width: 38px; min-height: 38px; display: grid; place-items: center; }
+main { max-width: 1400px; padding-top: 22px; }
+
+/* ---- ต้อนรับ ---- */
+.welcome { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
+.welcome .bld { flex: none; width: 158px; height: auto; }
+.welcome h2 { margin: 0; font-size: 27px; font-weight: 700; color: var(--accent); letter-spacing: -.01em; line-height: 1.25; }
+.welcome .wsub { margin: 2px 0 0; font-size: 14.5px; color: var(--muted); }
+.welcome .wsub2 { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+.welcome .ctl { margin-left: auto; }
+
+/* ---- การ์ดตัวเลข ---- */
+.kpis { gap: 16px; margin-bottom: 18px; }
+.kc {
+  --kc: #7b3fb5; position: relative; display: flex; align-items: center; gap: 14px; padding: 18px 16px; min-width: 0; overflow: hidden;
+  border-radius: 16px; border: 1px solid color-mix(in srgb, var(--kc) 16%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--kc) 13%, var(--surface)), color-mix(in srgb, var(--kc) 4%, var(--surface)));
+  box-shadow: var(--shadow);
+}
+.kc.green { --kc: #2fb36b; } .kc.orange { --kc: #f59a23; } .kc.red { --kc: #e5484d; }
+.kc .ic { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--kc); color: #fff; display: grid; place-items: center; position: relative; z-index: 1; box-shadow: 0 4px 10px color-mix(in srgb, var(--kc) 35%, transparent); }
+.kc .tx { min-width: 0; position: relative; z-index: 1; }
+.kc .l { font-weight: 600; font-size: 14.5px; color: var(--ink); line-height: 1.35; }
+.kc .v { font-size: 32px; font-weight: 700; line-height: 1.12; color: var(--ink); }
+.kc .tr { font-size: 12.5px; font-weight: 600; color: var(--good); line-height: 1.4; }
+.kc .tr.dn { color: var(--bad); } .kc .tr.warn { color: var(--warn); } .kc .tr.mu { color: var(--muted); }
+.kc .tr { display: flex; flex-direction: column; align-items: flex-start; }
+.kc .tr small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+.kc .tr.one { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; }
+.kc .spk { position: absolute; right: 0; bottom: 0; width: 38%; height: 46px; color: var(--kc); opacity: .6; pointer-events: none; }
+
+/* ---- การ์ดกราฟ (หัวม่วง) ---- */
+.dgrid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.dgrid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dcard { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; min-width: 0; }
+.dcard.mb { margin-bottom: 16px; }
+.dch { display: flex; align-items: center; gap: 10px; padding: 13px 18px; background: linear-gradient(90deg, var(--pea-1), var(--pea-2)); color: #fff; font-weight: 600; font-size: 16px; }
+.dch svg { flex: none; }
+.dch .sp { flex: 1; }
+.dch select { min-height: 34px; padding: 4px 30px 4px 14px; border: 0; border-radius: 10px; background-color: #fff; color: var(--pea-1); font-weight: 600; font-size: 14px; cursor: pointer; }
+.dcb { padding: 14px 18px 18px; }
+.dcb .hint { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
+.lgd { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--muted); margin-bottom: 2px; }
+.lgd i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.chart.lchart { min-width: 560px; }
+.chart .ln { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.chart .ln.a { stroke: var(--c1); }
+.chart .ln.b2 { stroke: color-mix(in srgb, var(--c1) 42%, var(--surface)); }
+.chart .dt.a { fill: var(--c1); stroke: var(--surface); stroke-width: 1.6; }
+.chart .dt.b2 { fill: color-mix(in srgb, var(--c1) 42%, var(--surface)); stroke: var(--surface); stroke-width: 1.6; }
+.chart .dt.sel { stroke: var(--accent); stroke-width: 2.2; }
+.chart .band { fill: color-mix(in srgb, var(--accent) 8%, transparent); }
+.chart .gl.dash { stroke-dasharray: 3 4; }
+
+/* ---- โดนัท ---- */
+.dn { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 18px 22px; padding: 6px 0; }
+.dn svg { flex: none; width: 176px; height: 176px; }
+.dn .num { font-size: 26px; font-weight: 700; fill: var(--ink); font-family: var(--font); }
+.dn .cap { font-size: 12px; fill: var(--muted); font-family: var(--font); }
+.dlg { flex: 1; min-width: 170px; display: flex; flex-direction: column; gap: 11px; }
+.dlg > div { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.dlg i { flex: none; width: 11px; height: 11px; border-radius: 50%; }
+.dlg span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlg b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 900px) { .dgrid, .dgrid.two { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 820px) {
+  .shell { grid-template-columns: minmax(0, 1fr); }
+  .side { padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); gap: 10px; }
+  .side .brand { padding: 8px 10px; }
+  .side .mark { width: 34px; height: 34px; }
+  .side nav { border-top: 0; padding-top: 0; }
+  nav a { white-space: nowrap; padding: 8px 12px; }
+  nav .trow a { padding-right: 12px; }
+  nav .kids a { padding: 8px 12px; }
+}
+@media (max-width: 700px) {
+  .today-chip .lbl, .bar .vsep { display: none; }
+  .bar .who .wtxt { display: none; }
+  .bar-in { gap: 8px; }
+  .welcome .ctl { margin-left: 0; width: 100%; }
+}
+@media (max-width: 520px) {
+  .kc { padding: 14px 12px; gap: 10px; }
+  .kc .ic { width: 44px; height: 44px; }
+  .kc .ic svg { width: 22px; height: 22px; }
+  .kc .v { font-size: 26px; }
+  .kc .l { font-size: 13px; }
+  .welcome h2 { font-size: 21px; }
+  .welcome .bld { width: 112px; }
+}
 </style>
 </head>
 
@@ -703,17 +839,23 @@ nav a[aria-current="page"]:hover { background: var(--accent-soft); color: var(--
         <div class="kids" id="bookKids"></div>
       </div>
     </nav>
-    <div class="side-foot">
-      <div class="who" id="sWho" hidden><img id="sAv" alt="" width="34" height="34" hidden><div><b id="sName"></b><div class="whoRow"><span id="sRole" class="rolechip"></span><button type="button" class="btn" id="btnLogout">ออกจากระบบ</button></div></div></div>
-    </div>
   </aside>
 
   <div class="content">
     <header class="bar"><div class="bar-in">
+      <button type="button" class="navbtn" id="btnNav" aria-label="ซ่อนหรือแสดงเมนู" aria-expanded="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div class="sp"></div>
       <label class="yearsel" for="selYear" id="yearWrap" hidden>ปี พ.ศ.<select id="selYear" aria-label="เลือกปี"></select></label>
       <button class="btn" id="btnRefresh" type="button" title="โหลดข้อมูลล่าสุดจาก Google Sheets">↻ รีเฟรช</button>
       <button class="btn pri" id="btnAdd" type="button">+ เพิ่มคำร้อง</button>
+      <div class="today-chip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span><span class="lbl">วันที่ใช้งาน : </span><span id="todayLbl"></span></span></div>
+      <span class="vsep" aria-hidden="true"></span>
+      <div class="who" id="sWho" hidden>
+        <span class="uav" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6z"/></svg></span>
+        <img id="sAv" alt="" width="40" height="40" hidden>
+        <div class="wtxt"><b id="sName"></b><span id="sRole" class="rolechip"></span></div>
+        <button type="button" class="btn icon" id="btnLogout" title="ออกจากระบบ" aria-label="ออกจากระบบ"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg></button>
+      </div>
     </div></header>
     <main>
       <div id="notice"></div>
@@ -1388,7 +1530,7 @@ function syncNav() {
 function updateYearSelector() {
   renderBookTree();
   const w = $('#yearWrap'), s = $('#selYear'), years = state.years || [];
-  if (!years.length || state.view === 'book' || state.view === 'daily') { w.hidden = true; return; }   // ใช้เฉพาะหน้าภาพรวม
+  w.hidden = true; return;   // ช่องเลือกปีของภาพรวมย้ายไปอยู่ในการ์ดกราฟแล้ว
   w.hidden = false;
   const sig = years.join(',') + '|' + state.year;
   if (s.dataset.sig === sig) return;
@@ -1436,26 +1578,160 @@ function barList(map, colorFn, total) {
   }).join('');
 }
 
+let spkN = 0;
+/** เส้นโค้งนุ่ม ๆ ผ่านจุดทุกจุด (Catmull-Rom → Bezier) base = ไม่ให้เส้นลงต่ำกว่าแกน */
+function smoothPath(pts, base) {
+  if (!pts.length) return '';
+  const cl = y => (base == null ? y : Math.min(y, base)), f = n => n.toFixed(1);
+  let d = 'M' + f(pts[0][0]) + ' ' + f(pts[0][1]);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+    d += ' C' + [p1[0] + (p2[0] - p0[0]) / 6, cl(p1[1] + (p2[1] - p0[1]) / 6), p2[0] - (p3[0] - p1[0]) / 6, cl(p2[1] - (p3[1] - p1[1]) / 6), p2[0], p2[1]].map(f).join(' ');
+  }
+  return d;
+}
+
+/** กราฟเส้นเล็ก ๆ มุมการ์ดตัวเลข */
+function sparkSvg(vals) {
+  if (vals.length < 2) return '';
+  const W = 140, H = 50, mx = Math.max(...vals, 1), mn = Math.min(...vals, 0), id = 'spk' + (++spkN);
+  const pts = vals.map((v, i) => [i / (vals.length - 1) * W, H - 5 - (v - mn) / ((mx - mn) || 1) * (H - 14)]);
+  const d = smoothPath(pts, H - 2);
+  return '<svg class="spk" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">'
+    + '<stop offset="0" stop-color="currentColor" stop-opacity=".28"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs>'
+    + '<path d="' + d + ' L' + W + ' ' + H + ' L0 ' + H + ' Z" fill="url(#' + id + ')"/>'
+    + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg>';
+}
+
+/** กราฟเส้นสถิติรายเดือน: คำร้องทั้งหมด / ตรวจแล้ว  cols = [{k,label,t,d,has}] */
+function lineChartSvg(cols, sel) {
+  const n = Math.max(cols.length, 1), W = 760, H = 262, L = 46, R = 16, T = 16, B = 34, pw = W - L - R, ph = H - T - B, base = T + ph;
+  const mx = Math.max(5, ...cols.map(c => c.t));
+  const step = mx <= 10 ? 2 : mx <= 25 ? 5 : mx <= 50 ? 10 : mx <= 120 ? 20 : mx <= 300 ? 50 : mx <= 600 ? 100 : mx <= 1200 ? 250 : 500;
+  const top = Math.ceil(mx / step) * step;
+  const X = i => L + (i + .5) * pw / n, Y = v => T + ph - v / top * ph;
+  let g = '';
+  for (let v = 0; v <= top; v += step) {
+    const y = Y(v);
+    g += '<line class="gl dash" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + v.toLocaleString('th-TH') + '</text>';
+  }
+  let last = -1;
+  cols.forEach((c, i) => { if (c.has) last = i; });
+  const idx = cols.map((c, i) => i).filter(i => i <= last);
+  const pa = idx.map(i => [X(i), Y(cols[i].t)]), pb = idx.map(i => [X(i), Y(cols[i].d)]);
+  if (pa.length > 1) {
+    const da = smoothPath(pa, base);
+    g += '<defs><linearGradient id="lcFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--c1)" stop-opacity=".16"/><stop offset="1" stop-color="var(--c1)" stop-opacity="0"/></linearGradient></defs>'
+      + '<path d="' + da + ' L' + pa[pa.length - 1][0] + ' ' + base + ' L' + pa[0][0] + ' ' + base + ' Z" fill="url(#lcFill)"/>'
+      + '<path class="ln b2" d="' + smoothPath(pb, base) + '"/><path class="ln a" d="' + da + '"/>';
+  }
+  cols.forEach((c, i) => {
+    const x = X(i), w = pw / n, on = c.k === sel;
+    g += '<g class="colx"' + (c.has ? ' data-month="' + esc(c.k) + '"' : '') + '><title>' + esc(c.title) + '</title>'
+      + (on ? '<rect class="band" x="' + (x - w / 2) + '" y="' + T + '" width="' + w + '" height="' + ph + '" rx="6"/>' : '')
+      + '<rect class="hit" x="' + (x - w / 2) + '" y="' + T + '" width="' + w + '" height="' + ph + '"/>';
+    if (c.has) {
+      g += '<circle class="dt b2' + (on ? ' sel' : '') + '" cx="' + x + '" cy="' + Y(c.d) + '" r="' + (on ? 5 : 3.6) + '"/>'
+        + '<circle class="dt a' + (on ? ' sel' : '') + '" cx="' + x + '" cy="' + Y(c.t) + '" r="' + (on ? 5.6 : 4.2) + '"/>';
+    }
+    g += '<text x="' + x + '" y="' + (H - 11) + '" text-anchor="middle"' + (on ? ' style="fill:var(--accent);font-weight:600"' : '') + '>' + esc(c.label) + '</text></g>';
+  });
+  return '<svg class="chart lchart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="สถิติคำร้องรายเดือน">' + g + '</svg>';
+}
+
+/** โดนัทแยกตามประเภท: 4 ประเภทมากสุด + อื่น ๆ */
+const DN_COL = ['#6a2c91', '#5b9bea', '#f6b04a', '#4fb89a'], DN_OTHER = '#d3cfd9';
+function donutHtml(types, centerNum) {
+  const e = Object.entries(types || {}).sort((a, b) => b[1] - a[1]);
+  const sum = e.reduce((a, x) => a + x[1], 0);
+  if (!sum) return '<div class="empty">ไม่มีข้อมูล</div>';
+  const items = e.slice(0, 4).map((x, i) => ({ name: x[0], v: x[1], c: DN_COL[i] }));
+  const rest = e.slice(4).reduce((a, x) => a + x[1], 0);
+  if (rest) items.push({ name: 'อื่น ๆ', v: rest, c: DN_OTHER });
+  const R0 = 62, C = 2 * Math.PI * R0, gap = items.length > 1 ? 2.5 : 0;
+  let acc = 0, arcs = '';
+  items.forEach(it => {
+    const len = it.v / sum * C;
+    arcs += '<circle cx="90" cy="90" r="' + R0 + '" fill="none" stroke="' + it.c + '" stroke-width="26" stroke-dasharray="' + Math.max(len - gap, .5).toFixed(2) + ' ' + C.toFixed(2)
+      + '" stroke-dashoffset="' + (-acc).toFixed(2) + '"><title>' + esc(it.name) + ' · ' + it.v + '</title></circle>';
+    acc += len;
+  });
+  const svg = '<svg viewBox="0 0 180 180" role="img" aria-label="สัดส่วนประเภทคำร้อง"><g transform="rotate(-90 90 90)">' + arcs + '</g>'
+    + '<circle cx="90" cy="90" r="48" fill="var(--surface2)"/>'
+    + '<text class="num" x="90" y="92" text-anchor="middle">' + centerNum.toLocaleString('th-TH') + '</text><text class="cap" x="90" y="110" text-anchor="middle">ทั้งหมด</text></svg>';
+  const lg = items.map(it => '<div><i style="background:' + it.c + '"></i><span title="' + esc(it.name) + '">' + esc(it.name) + '</span><b>' + (it.v / sum * 100).toFixed(1) + '%</b></div>').join('');
+  return '<div class="dn">' + svg + '<div class="dlg">' + lg + '</div></div>';
+}
+
+const BUILDING_SVG = '<svg class="bld" viewBox="0 0 190 110" aria-hidden="true">'
+  + '<defs><pattern id="bwin" width="18" height="14" patternUnits="userSpaceOnUse"><rect x="3" y="3" width="11" height="8" rx="1.5" fill="#9a78c8"/></pattern></defs>'
+  + '<rect x="0" y="100" width="190" height="3" rx="1.5" fill="#cdbde6"/>'
+  + '<polygon points="140,40 160,29 160,88 140,100" fill="#c3aee0" stroke="#6a2c91" stroke-width="1.2" stroke-linejoin="round"/>'
+  + '<polygon points="40,40 60,29 160,29 140,40" fill="#d8cbeb" stroke="#6a2c91" stroke-width="1.2" stroke-linejoin="round"/>'
+  + '<rect x="40" y="40" width="100" height="60" fill="#ece5f6" stroke="#6a2c91" stroke-width="1.2"/>'
+  + '<rect x="46" y="48" width="88" height="32" fill="url(#bwin)"/>'
+  + '<rect x="80" y="82" width="20" height="18" rx="1.5" fill="#6a2c91"/>'
+  + '<rect x="68" y="10" width="76" height="24" rx="4" fill="#fff" stroke="#6a2c91" stroke-width="1.4"/>'
+  + '<text x="106" y="28" text-anchor="middle" font-size="17" font-weight="800" fill="#5d2f93" font-family="sans-serif">PEA</text>'
+  + '<rect x="13" y="76" width="5" height="24" fill="#5d2f93"/><circle cx="15" cy="64" r="15" fill="#8a56c4"/><circle cx="26" cy="72" r="10" fill="#a373d6"/>'
+  + '<rect x="170" y="80" width="4" height="20" fill="#5d2f93"/><circle cx="172" cy="70" r="13" fill="#8a56c4"/><circle cx="181" cy="78" r="8" fill="#a373d6"/>'
+  + '</svg>';
+
+function dcard(icon, title, body, extra, cls) {
+  return '<section class="dcard' + (cls ? ' ' + cls : '') + '"><div class="dch">' + icon + '<span>' + title + '</span>' + (extra ? '<span class="sp"></span>' + extra : '') + '</div><div class="dcb">' + body + '</div></section>';
+}
+const ICO_BAR = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>';
+const ICO_PIE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 3a9 9 0 1 0 9 9h-9z"/><path d="M13 2.1V11h8.9A9 9 0 0 0 13 2.1z"/></svg>';
+const ICO_CAL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+const kIc = p => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+
 function renderDashboard() {
   const s = state.summary;
   if (!s) return;
   state.frame = 'dashboard';
   const m = s.month, months = s.months || [], year = state.year, types = s.types || {};
   const sumOf = o => Object.values(o || {}).reduce((a, b) => a + b, 0);
+  const shortM = k => pkey(k + '-01').toLocaleDateString('th-TH', { month: 'short' });
+  const N = v => (v || 0).toLocaleString('th-TH');
 
-  const monthOpts = months.slice().reverse()
-    .map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
+  /* คอลัมน์ของกราฟเส้น: เลือกปี = 12 เดือนของปีนั้น / ทุกปี = 12 เดือนล่าสุดที่มีข้อมูล */
+  const msMap = {};
+  (s.monthSummary || []).forEach(x => { msMap[x.key] = x; });
+  const keys = year ? Array.from({ length: 12 }, (_, i) => year + '-' + pad(i + 1)) : months.slice(-12);
+  const cols = keys.map(k => {
+    const x = msMap[k], t = x ? x.total : 0, d = x ? x.total - x.open : 0;
+    return { k, label: shortM(k) + (year ? '' : ' ' + String((+k.slice(0, 4) + 543) % 100).padStart(2, '0')), t, d, has: !!x,
+      title: fmtM(k) + ' · ทั้งหมด ' + t + ' · ตรวจแล้ว ' + d };
+  });
+  const have = cols.filter(c => c.has);
 
-  const monthly = (year ? months : months.slice(-6)).slice().reverse().map(x => ({
-    k: x, label: pkey(x + '-01').toLocaleDateString('th-TH', { month: 'short' }),
-    c: s.byMonth[x] || 0, cur: x === m, title: fmtM(x) + ' · ' + (s.byMonth[x] || 0) + ' คำร้อง'
-  }));
-  const yearly = s.yearSummary.map(x => ({ k: x.key, label: String(+x.key + 543), c: x.total, title: 'ปี ' + (+x.key + 543) }));
   const daysInMonth = new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate();
   const daily = Array.from({ length: daysInMonth }, (_, i) => {
     const k = m + '-' + pad(i + 1), c = s.byDay[k] || 0;
     return { k, label: String(i + 1), c, cur: k === TODAY, title: fmt(k) + ' · ' + c + ' คำร้อง' };
   });
+
+  /* ตัวเลขสรุป */
+  const done = Math.max(0, s.total - s.open);
+  const pctOf = v => (s.total ? Math.round(v / s.total * 100) : 0);
+  const arrow = d => (d > 0 ? '↑' : d < 0 ? '↓' : '→');
+  let t1;
+  if (s.previousMonthTotal) {
+    const p = Math.round((s.monthTotal - s.previousMonthTotal) / s.previousMonthTotal * 100);
+    t1 = '<div class="tr' + (p < 0 ? ' dn' : '') + '" title="จำนวนคำร้องของ ' + esc(fmtM(m)) + ' เทียบกับเดือนก่อนหน้า">' + arrow(p) + ' ' + (p > 0 ? '+' : '') + p + '%<small>เทียบเดือนก่อน</small></div>';
+  } else t1 = '<div class="tr mu">เดือนนี้ ' + N(s.monthTotal) + ' รายการ</div>';
+  const dd = s.today - s.yesterday;
+  const t4 = '<div class="tr' + (dd < 0 ? ' dn' : dd === 0 ? ' mu' : '') + '" title="เมื่อวานมี ' + s.yesterday + ' รายการ">' + arrow(dd) + ' ' + (dd === 0 ? 'เท่าเมื่อวาน' : Math.abs(dd) + '<small>เทียบเมื่อวาน</small>') + '</div>';
+
+  const kpis =
+    '<div class="kc"><div class="ic">' + kIc('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>') + '</div><div class="tx"><div class="l">คำร้องทั้งหมด</div><div class="v">' + N(s.total) + '</div>' + t1 + '</div>' + sparkSvg(have.map(c => c.t)) + '</div>'
+    + '<div class="kc green"><div class="ic">' + kIc('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>') + '</div><div class="tx"><div class="l">ตรวจแล้ว</div><div class="v">' + N(done) + '</div><div class="tr">' + pctOf(done) + '%<small>ของทั้งหมด</small></div></div>' + sparkSvg(have.map(c => c.d)) + '</div>'
+    + '<div class="kc orange"><div class="ic">' + kIc('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>') + '</div><div class="tx"><div class="l">รอผลตรวจ</div><div class="v">' + N(s.open) + '</div><div class="tr warn">' + pctOf(s.open) + '%<small>ของทั้งหมด</small></div></div>' + sparkSvg(have.map(c => c.t - c.d)) + '</div>'
+    + '<div class="kc red"><div class="ic">' + kIc('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h4"/>') + '</div><div class="tx"><div class="l">คำร้องวันนี้</div><div class="v">' + N(s.today) + '</div>' + t4 + '</div>' + sparkSvg(daily.map(c => c.c)) + '</div>';
+
+  const yearOpts = '<option value=""' + (year ? '' : ' selected') + '>ทุกปี</option>'
+    + (state.years || []).slice().reverse().map(y => '<option value="' + y + '"' + (y === year ? ' selected' : '') + '>ปี ' + (+y + 543) + '</option>').join('');
+  const monthOpts = months.slice().reverse().map(x => '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + fmtM(x) + '</option>').join('');
 
   const allTypes = [...new Set([...typeList(), ...Object.keys(types)])].filter(t => types[t] !== undefined);
   const monthRows = (s.monthSummary || []).filter(x => year ? x.key.startsWith(year) : true);
@@ -1466,36 +1742,33 @@ function renderDashboard() {
   const mcol = { 'ธรรมดา': 'var(--c2)', 'TOU': 'var(--c3)', 'EV': 'var(--c4)', '1P': 'var(--c1)', '3P': 'var(--c5)' };
 
   $('#view').innerHTML =
-    '<div class="head"><div><h2>ภาพรวมคำร้อง ' + fmtM(m) + '</h2><div class="sub">'
-    + (year ? 'ปี พ.ศ. ' + (+year + 543) : 'ทุกปี') + ' · ' + s.total.toLocaleString('th-TH') + ' รายการ</div></div>'
-    + '<div class="sp"></div><div class="ctl"><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
+    '<div class="welcome">' + BUILDING_SVG
+    + '<div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p>'
+    + '<p class="wsub2">' + (year ? 'ปี พ.ศ. ' + (+year + 543) : 'ทุกปี') + ' · ' + N(s.total) + ' รายการ · แสดงรายละเอียดของ ' + fmtM(m) + '</p></div>'
+    + '<div class="ctl"><label class="sub" for="selMonth">เดือน</label><select id="selMonth">' + monthOpts + '</select></div></div>'
 
-    + '<div class="kpis">'
-    + '<div class="kpi"><div class="l">คำร้องวันนี้</div><div class="v">' + s.today + '</div><div class="d">เมื่อวาน ' + s.yesterday + ' รายการ</div></div>'
-    + '<div class="kpi"><div class="l">คำร้องเดือนนี้</div><div class="v">' + s.monthTotal + '</div><div class="d">'
-    + (s.previousMonthTotal == null ? 'ยังไม่มีเดือนก่อนหน้า' : 'เดือนก่อน ' + s.previousMonthTotal + ' รายการ') + '</div></div>'
-    + '<div class="kpi open"><div class="l">รอผลตรวจ</div><div class="v">' + s.open + '</div><div class="d">ยังไม่ระบุผ่าน/ไม่ผ่าน</div></div>'
-    + '<div class="kpi"><div class="l">ตรวจแล้วเดือนนี้</div><div class="v">' + s.doneMonth + '</div><div class="d">'
-    + (s.monthTotal ? Math.round(s.doneMonth / s.monthTotal * 100) : 0) + '% ของคำร้องเดือนนี้</div></div>'
+    + '<div class="kpis">' + kpis + '</div>'
+
+    + '<div class="dgrid">'
+    + dcard(ICO_BAR, 'สถิติคำร้องรายเดือน',
+        '<div class="lgd"><span><i style="background:var(--c1)"></i>คำร้องทั้งหมด</span><span><i style="background:color-mix(in srgb,var(--c1) 42%,var(--surface))"></i>ตรวจแล้ว</span></div>'
+        + '<div class="scroll">' + lineChartSvg(cols, m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>',
+        '<select id="selYearD" aria-label="เลือกปี">' + yearOpts + '</select>')
+    + dcard(ICO_PIE, 'ประเภทคำร้อง',
+        '<div class="hint">เฉพาะ ' + fmtM(m) + ' · คำร้องที่มีหลายประเภทนับในทุกประเภทที่มี</div>' + donutHtml(types, s.monthTotal))
     + '</div>'
 
-    + '<div class="panel mb"><h3>' + (year ? 'จำนวนคำร้องรายเดือน ปี ' + (+year + 543) : 'จำนวนคำร้องรายปี') + '</h3>'
-    + '<div class="hint">คลิกแท่งกราฟเพื่อเลือกปีหรือเดือน</div>'
-    + '<div class="scroll">' + barsSvg(year ? monthly : yearly, year ? 'data-month' : 'data-y', 'จำนวนคำร้อง') + '</div></div>'
+    + dcard(ICO_CAL, 'จำนวนคำร้องรายวัน · ' + fmtM(m), '<div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div><div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div>', '', 'mb')
 
-    + '<div class="panel mb"><h3>จำนวนคำร้องรายวัน</h3><div class="hint">คลิกแท่งเพื่อดูรายการของวันนั้น</div>'
-    + '<div class="scroll">' + barsSvg(daily, 'data-day', 'จำนวนคำร้องรายวัน') + '</div></div>'
-
-    + '<div class="grid">'
-    + '<div class="panel"><h3>แยกตามประเภทคำร้อง</h3><div class="hint">เฉพาะ ' + fmtM(m) + ' · คำร้องที่มีหลายประเภทนับในทุกประเภทที่มี</div>'
-    + barList(types, k => TCOL[typeIdx(k)], s.monthTotal) + '</div>'
-    + '<div class="panel"><h3>เฟส</h3><div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>'
-    + barList(s.phases, k => mcol[k] || 'var(--c6)', sumOf(s.phases)) + '</div>'
+    + '<div class="dgrid two">'
+    + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง', '<div class="hint">เฉพาะ ' + fmtM(m) + '</div>' + barList(types, k => TCOL[typeIdx(k)], s.monthTotal))
+    + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + barList(s.phases, k => mcol[k] || 'var(--c6)', sumOf(s.phases)))
     + '</div>'
 
-    + '<div class="panel"><h3>สรุปรายเดือน</h3><div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div>'
-    + '<div class="scroll"><table><thead><tr><th>เดือน</th><th class="n">รวม</th>'
-    + allTypes.map(t => '<th class="n">' + esc(t) + '</th>').join('') + '<th class="n">ค้าง</th></tr></thead><tbody>' + tbl + '</tbody></table></div></div>';
+    + dcard(ICO_CAL, 'สรุปรายเดือน',
+        '<div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div>'
+        + '<div class="scroll"><table><thead><tr><th>เดือน</th><th class="n">รวม</th>'
+        + allTypes.map(t => '<th class="n">' + esc(t) + '</th>').join('') + '<th class="n">ค้าง</th></tr></thead><tbody>' + tbl + '</tbody></table></div>');
 }
 
 /* =====================================================================
@@ -2068,7 +2341,7 @@ document.addEventListener('change', e => {
   if (t.closest('#mpop')) { onPopChange(t); return; }
   switch (t.id) {
     case 'selMonth': state.month = t.value; loadView(); break;
-    case 'selYear':  state.year = t.value; state.fm = ''; state.page = 0; loadView(); break;
+    case 'selYear': case 'selYearD': state.year = t.value; state.fm = ''; state.page = 0; loadView(); break;
     case 'fm': state.fm = t.value; state.page = 0; loadView(); break;
     case 'ft': state.ft = t.value; state.page = 0; loadView(); break;
     case 'fs': state.fs = t.value; state.page = 0; loadView(); break;
@@ -2214,6 +2487,11 @@ async function checkAccess() {
   }
 }
 $('#btnRetry').addEventListener('click', checkAccess);
+$('#btnNav').addEventListener('click', () => {
+  const off = $('.shell').classList.toggle('nav-off');
+  $('#btnNav').setAttribute('aria-expanded', String(!off));
+});
+$('#todayLbl').textContent = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
 $('#btnLogout').addEventListener('click', () => {
   try { sessionStorage.removeItem('idt'); } catch (e) { /* ไม่เป็นไร */ }
   try { window.google && google.accounts.id.disableAutoSelect(); } catch (e) { /* ไม่เป็นไร */ }
