@@ -1791,29 +1791,34 @@ function donutHtml(types, centerNum) {
   return '<div class="dn">' + svg + '<div class="dlg">' + lg + '</div></div>';
 }
 
-/** โดนัทแยกตามประเภทคำร้อง (การ์ดซ้าย): 8 ประเภทมากสุดมีสีของตัวเอง ที่เหลือรวมเป็น \"อื่น ๆ\" */
-const DN_PAL = ['#6a2c91', '#5b9bea', '#f6b04a', '#4fb89a', '#d4528a', '#2f8f9d', '#e8794a', '#8f7cc9'];
-function donutFull(types, centerNum) {
-  const e = Object.entries(types || {}).sort((a, b) => b[1] - a[1]);
-  const sum = e.reduce((a, x) => a + x[1], 0);
+/** โดนัททั่วไป: items = [{name, v, c, tip?}] · wide = วงซ้าย คำอธิบายขวา */
+function donutGen(items, centerNum, cap, wide, label) {
+  const sum = items.reduce((a, x) => a + x.v, 0);
   if (!sum) return '<div class="empty">ไม่มีข้อมูล</div>';
-  const N = DN_PAL.length;
-  const items = e.slice(0, N).map((x, i) => ({ name: x[0], v: x[1], c: DN_PAL[i] }));
-  const restArr = e.slice(N), rest = restArr.reduce((a, x) => a + x[1], 0);
-  if (rest) items.push({ name: 'อื่น ๆ (' + restArr.length + ' ประเภท)', v: rest, c: DN_OTHER, tip: restArr.map(x => x[0] + ' ' + x[1]).join(', ') });
-  const R0 = 62, C = 2 * Math.PI * R0, gap = items.length > 1 ? 2.5 : 0;
+  const R0 = 62, C = 2 * Math.PI * R0, gap = items.filter(x => x.v > 0).length > 1 ? 2.5 : 0;
   let acc = 0, arcs = '';
   items.forEach(it => {
+    if (!it.v) return;
     const len = it.v / sum * C;
     arcs += '<circle cx="90" cy="90" r="' + R0 + '" fill="none" stroke="' + it.c + '" stroke-width="26" stroke-dasharray="' + Math.max(len - gap, .5).toFixed(2) + ' ' + C.toFixed(2)
       + '" stroke-dashoffset="' + (-acc).toFixed(2) + '"><title>' + esc(it.tip || it.name) + ' · ' + it.v + '</title></circle>';
     acc += len;
   });
-  const svg = '<svg viewBox="0 0 180 180" role="img" aria-label="สัดส่วนแยกตามประเภทคำร้อง"><g transform="rotate(-90 90 90)">' + arcs + '</g>'
+  const svg = '<svg viewBox="0 0 180 180" role="img" aria-label="' + esc(label || 'สัดส่วน') + '"><g transform="rotate(-90 90 90)">' + arcs + '</g>'
     + '<circle cx="90" cy="90" r="48" fill="var(--surface)"/>'
-    + '<text class="num" x="90" y="92" text-anchor="middle">' + Number(centerNum || 0).toLocaleString('th-TH') + '</text><text class="cap" x="90" y="110" text-anchor="middle">คำร้อง</text></svg>';
+    + '<text class="num" x="90" y="92" text-anchor="middle">' + Number(centerNum || 0).toLocaleString('th-TH') + '</text><text class="cap" x="90" y="110" text-anchor="middle">' + esc(cap || '') + '</text></svg>';
   const lg = items.map(it => '<div><i style="background:' + it.c + '"></i><span title="' + esc(it.tip || it.name) + '">' + esc(it.name) + '</span><b>' + it.v + ' <em>· ' + Math.round(it.v / sum * 100) + '%</em></b></div>').join('');
-  return '<div class="dn wide">' + svg + '<div class="dlg">' + lg + '</div></div>';
+  return '<div class="dn' + (wide ? ' wide' : '') + '">' + svg + '<div class="dlg">' + lg + '</div></div>';
+}
+
+/** แยกตามประเภทคำร้อง: 6 ประเภทมากสุดมีสีของตัวเอง ที่เหลือรวมเป็น "อื่น ๆ" */
+const DN_PAL = ['#6a2c91', '#5b9bea', '#f6b04a', '#4fb89a', '#d4528a', '#2f8f9d'];
+function donutFull(types, centerNum) {
+  const e = Object.entries(types || {}).sort((a, b) => b[1] - a[1]);
+  const items = e.slice(0, DN_PAL.length).map((x, i) => ({ name: x[0], v: x[1], c: DN_PAL[i] }));
+  const restArr = e.slice(DN_PAL.length), rest = restArr.reduce((a, x) => a + x[1], 0);
+  if (rest) items.push({ name: 'อื่น ๆ (' + restArr.length + ' ประเภท)', v: rest, c: DN_OTHER, tip: restArr.map(x => x[0] + ' ' + x[1]).join(', ') });
+  return donutGen(items, centerNum, 'คำร้อง', true, 'สัดส่วนแยกตามประเภทคำร้อง');
 }
 
 const BUILDING_SVG = '<svg class="bld" viewBox="0 0 190 110" aria-hidden="true">'
@@ -1892,6 +1897,7 @@ function renderDashboard() {
     '<tr><td>' + fmtM(x.key) + '</td><td class="n"><b>' + x.total + '</b></td>'
     + allTypes.map(t => '<td class="n">' + (x.types[t] || 0) + '</td>').join('')
     + '<td class="n">' + x.open + '</td></tr>').join('');
+  const PH_COL = { '1P': '#6a2c91', '3P': '#d4528a' };
   const mcol = { 'ธรรมดา': 'var(--c2)', 'TOU': 'var(--c3)', 'EV': 'var(--c4)', '1P': 'var(--c1)', '3P': 'var(--c5)' };
 
   /* ---- รายการสรุปรายเดือน (แบบรายการ เหมือนกล่อง Recent Transaction) ---- */
@@ -1918,14 +1924,14 @@ function renderDashboard() {
         '<select id="selYearD" aria-label="เลือกปี">' + yearOpts + '</select>')
     + '<div class="dgrid two">'
     + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง', '<div class="hint">เฉพาะ ' + fmtM(m) + '</div>' + donutFull(types, s.monthTotal))
-    + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + barList(s.phases, k => mcol[k] || 'var(--c6)', sumOf(s.phases)))
+    + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
     + '</div>'
     + '</div>'
     /* ---- คอลัมน์ขวา: รายการสรุปรายเดือน > โดนัทประเภทคำร้อง ---- */
     + '<div class="dright">'
     + dcard(ICO_CAL, 'สรุปรายเดือน', '<div class="hint">' + (year ? 'ทุกเดือนของปีที่เลือก' : '6 เดือนล่าสุดที่มีข้อมูล') + '</div><div class="mlist">' + mlist + '</div>')
-    + dcard(ICO_PIE, 'ประเภทคำร้อง Top 4',
-        '<div class="hint">' + fmtM(m) + ' · เรียงตามจำนวนคำร้องมากที่สุด 4 อันดับแรก ที่เหลือรวมเป็น "อื่น ๆ"</div>' + donutHtml(types, s.monthTotal))
+    + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + fmtM(m) + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
+        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', false, 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
     + '</div>'
 
