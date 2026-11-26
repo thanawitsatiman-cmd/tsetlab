@@ -1719,7 +1719,7 @@ function updateYearSelector() {
 function barsSvg(items, attr, label) {
   const n = Math.max(items.length, 1);
   const mx = Math.max(5, ...items.map(i => i.c));
-  const step = mx <= 10 ? 2 : mx <= 20 ? 5 : mx <= 50 ? 10 : mx <= 100 ? 20 : 100;
+  const step = mx <= 10 ? 2 : mx <= 25 ? 5 : mx <= 50 ? 10 : mx <= 120 ? 20 : mx <= 300 ? 50 : mx <= 600 ? 100 : mx <= 1200 ? 250 : mx <= 3000 ? 500 : mx <= 6000 ? 1000 : 2500;
   const top = Math.ceil(mx / step) * step;
   const W = 760, H = 210, L = 40, R = 6, T = 14, B = 26, bw = (W - L - R) / n, ph = H - T - B;
   let g = '';
