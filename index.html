@@ -957,6 +957,19 @@ th, td { padding: 9px 10px; }
 .side .side-foot .who .rolechip { background: none; padding: 0; color: rgba(255, 255, 255, .75); font-size: 12px; }
 .side .side-foot .uav { background: rgba(255, 255, 255, .22); }
 .side .side-foot .btn.icon { flex: none; width: 36px; min-height: 36px; padding: 0; }
+/* ---- แดชบอร์ด: งานค้าง ---- */
+.bkl { display: grid; gap: 2px; }
+.bkr { display: grid; grid-template-columns: 124px minmax(0, 1fr) 84px; gap: 10px; align-items: center; padding: 7px 8px; margin: 0 -8px; width: calc(100% + 16px); border: 0; border-radius: 10px; background: none; color: inherit; font: inherit; text-align: left; }
+button.bkr { cursor: pointer; }
+button.bkr:hover { background: var(--surface2); }
+.bkr .n { display: flex; align-items: center; gap: 7px; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bkr .n i { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--c, var(--lv0)); }
+.bkr .t { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.bkr .t i { display: block; height: 100%; border-radius: 4px; background: var(--c, var(--lv0)); }
+.bkr .v { text-align: right; font-size: 13px; color: var(--muted); }
+.bkr .v b { color: var(--ink); font-weight: 600; }
+.bkr.zero { opacity: .55; }
+@media (max-width: 600px) { .bkr { grid-template-columns: 104px minmax(0, 1fr) 66px; } }
 </style>
 </head>
 
@@ -1876,6 +1889,40 @@ const ICO_PIE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentCo
 const ICO_CAL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
 const kIc = p => '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
 
+/** งานค้าง: แยกตามระดับสาเหตุ (กดเพื่อไปสมุดคุมที่กรองไว้) + อายุงานค้าง นับเฉพาะที่ยังรอผลตรวจในช่วงปีที่เลือก */
+function backlogHtml(s, scope) {
+  if (!s.aging || !s.openReasons) { state.lvReasons = {}; return ''; }
+  const N = v => (v || 0).toLocaleString('th-TH');
+  const cnt = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, rs = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set(), 4: new Set(), 5: new Set() };
+  let none = 0;
+  Object.entries(s.openReasons).forEach(([k, n]) => {
+    const arr = splitMulti(k);
+    if (!arr.length) { none += n; return; }
+    cnt[worstLv(arr)] += n;
+    arr.forEach(x => rs[reasonLv(x)].add(x));
+  });
+  state.lvReasons = { none: ['__none'] };
+  [0, 1, 2, 3, 4, 5].forEach(n => { state.lvReasons[n] = [...rs[n]]; });
+  const total = Math.max(s.open || 0, 1);
+  const row = (name, v, color, go) => {
+    const inner = '<span class="n"><i></i>' + esc(name) + '</span><span class="t"><i style="width:' + (v / total * 100) + '%"></i></span>'
+      + '<span class="v"><b>' + N(v) + '</b> · ' + Math.round(v / total * 100) + '%</span>';
+    return (go && v
+      ? '<button type="button" class="bkr" style="--c:' + color + '" data-lvgo="' + go + '" title="ดูรายการในสมุดคุมคำร้อง">' + inner + '</button>'
+      : '<div class="bkr' + (v ? '' : ' zero') + '" style="--c:' + color + '">' + inner + '</div>');
+  };
+  const lvRows = [1, 2, 3, 4, 5, 0].map(n => row(LV_NAMES[n], cnt[n], lvVar(n), String(n)))
+    .concat([row('ยังไม่ระบุสาเหตุ', none, 'var(--c6)', 'none')]).join('');
+  const a = s.aging;
+  const ageRows = row('ไม่เกิน 7 วัน', a.d7, 'var(--good)') + row('8–15 วัน', a.d15, 'var(--lv3)') + row('16–30 วัน', a.d30, 'var(--lv2)') + row('เกิน 30 วัน', a.over, 'var(--lv1)');
+  const oldest = s.oldestOpenDays ? ' · เก่าที่สุด ' + N(s.oldestOpenDays) + ' วัน' : '';
+  return '<div class="sec"><div><h3>งานค้าง · ' + scope + '</h3><p class="ssub">' + N(s.open) + ' คำร้องที่ยังรอผลตรวจ</p></div></div>'
+    + '<div class="dgrid two">'
+    + dcard(ICO_PIE, 'งานค้างตามระดับสาเหตุ', '<div class="hint">นับตามสาเหตุที่รุนแรงที่สุดของแต่ละคำร้อง · กดแถวเพื่อดูรายการ</div><div class="bkl">' + lvRows + '</div>')
+    + dcard(ICO_CAL, 'อายุงานค้าง', '<div class="hint">นับจากวันรับคำร้องถึงวันนี้' + oldest + '</div><div class="bkl">' + ageRows + '</div>')
+    + '</div>';
+}
+
 function renderDashboard() {
   const s = state.summary;
   if (!s) return;
@@ -1920,7 +1967,7 @@ function renderDashboard() {
 
   const kpis =
     '<div class="kc"><div class="ic">' + kIc('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>') + '</div><div class="tx"><div class="l">คำร้องทั้งหมด · ' + scope + '</div><div class="v">' + N(s.total) + '</div>' + t1 + '</div>' + sparkSvg(have.map(c => c.t)) + '</div>'
-    + '<div class="kc green"><div class="ic">' + kIc('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>') + '</div><div class="tx"><div class="l">ตรวจแล้ว · ' + scope + '</div><div class="v">' + N(done) + '</div><div class="tr">' + pctOf(done) + '%<small>ของทั้งหมด</small></div></div>' + sparkSvg(have.map(c => c.d)) + '</div>'
+    + '<div class="kc green"><div class="ic">' + kIc('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>') + '</div><div class="tx"><div class="l">ตรวจแล้ว · ' + scope + '</div><div class="v">' + N(done) + '</div><div class="tr' + (s.fail ? ' dn' : '') + '" title="ตรวจแล้ว ' + pctOf(done) + '% ของทั้งหมด">ไม่ผ่าน ' + N(s.fail || 0) + ' · ' + (done ? Math.round((s.fail || 0) / done * 100) : 0) + '%<small>ของที่ตรวจแล้ว</small></div></div>' + sparkSvg(have.map(c => c.d)) + '</div>'
     + '<div class="kc orange"><div class="ic">' + kIc('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>') + '</div><div class="tx"><div class="l">รอผลตรวจ · ' + scope + '</div><div class="v">' + N(s.open) + '</div><div class="tr warn">' + pctOf(s.open) + '%<small>ของทั้งหมด</small></div></div>' + sparkSvg(have.map(c => c.t - c.d)) + '</div>'
     + '<div class="kc red"><div class="ic">' + kIc('<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14h4"/>') + '</div><div class="tx"><div class="l">คำร้องวันนี้</div><div class="v">' + N(s.today) + '</div>' + t4 + '</div>' + sparkSvg(daily.map(c => c.c)) + '</div>';
 
@@ -1952,13 +1999,14 @@ function renderDashboard() {
 
   const sec = (title, sub, ctl) => '<div class="sec"><div><h3>' + title + '</h3><p class="ssub">' + sub + '</p></div>' + (ctl ? '<span class="sp"></span><div class="ctl">' + ctl + '</div>' : '') + '</div>';
   $('#view').innerHTML = '<div class="dash">'
-    + '<div class="welcome"><div><h2>ยินดีต้อนรับเข้าสู่ระบบ</h2><p class="wsub">ระบบสมุดคุมคำร้องขอใช้ไฟ การไฟฟ้าส่วนภูมิภาค (PEA)</p></div></div>'
+    + ''
     + '<div class="fbar"><label class="sub" for="selYearW">ปี</label><select id="selYearW">' + yearOpts + '</select>'
     + '<label class="sub" for="selMonth">เดือน</label><select id="selMonth"' + (year ? '' : ' disabled title="เลือกปีก่อน จึงจะเลือกเดือนได้"') + '>' + monthOpts + '</select>'
     + '<span class="fnote">' + (year ? 'ปี ใช้กับทั้งหน้า · เดือน ใช้กับส่วน “รายละเอียด” ด้านล่าง' : 'ทุกปี = แสดงข้อมูลรวมทุกปี · เลือกปีเพื่อดูรายเดือน') + '</span></div>'
     /* ---- ส่วนที่ 1: ภาพรวมตามปี (ตัวเลือกปีอยู่ตรงหัวส่วนนี้) ---- */
     + sec('ภาพรวม · ' + scope, N(s.total) + ' คำร้อง')
     + '<div class="kpis">' + kpis + '</div>'
+    + backlogHtml(s, scope)
     + dcard(ICO_BAR, 'สถิติคำร้องรายเดือน',
         '<div class="lgd"><span><i style="background:var(--c1)"></i>คำร้องทั้งหมด</span><span><i style="background:color-mix(in srgb,var(--c1) 42%,var(--surface))"></i>ตรวจแล้ว</span></div>'
         + '<div class="scroll">' + lineChartSvg(cols, allMode ? '' : m) + '</div><div class="hint">คลิกที่เดือนบนกราฟเพื่อดูรายละเอียดของเดือนนั้น</div>')
@@ -1967,8 +2015,13 @@ function renderDashboard() {
     + dcard(ICO_PIE, 'แยกตามประเภทคำร้อง · ' + Object.keys(types).length + ' ประเภท', '<div class="hint">ทุกประเภทของ ' + mLbl + ' · % คิดจากจำนวนคำร้อง (1 คำร้องมีได้หลายประเภท)</div>' + '<div class="tgrid">' + barList(types, () => 'var(--c1)', s.monthTotal) + '</div>')
     + '<div class="dgrid two">'
     + dcard(ICO_BAR, 'เฟส', '<div class="hint">นับเฉพาะงานที่ระบุข้อมูล</div>' + donutGen(Object.entries(s.phases || {}).sort((a, b) => b[1] - a[1]).map(x => ({ name: x[0], v: x[1], c: PH_COL[x[0]] || '#8f7cc9' })), sumOf(s.phases), 'งาน', true, 'สัดส่วนเฟส'))
-    + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + mLbl + ' · ตรวจแล้ว = ผ่าน หรือ ไม่ผ่าน</div>'
-        + donutGen([{ name: 'ตรวจแล้ว', v: s.doneMonth || 0, c: '#4fb89a' }, { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }], s.monthTotal, 'คำร้อง', true, 'สัดส่วนสถานะการตรวจ'))
+    + dcard(ICO_PIE, 'สถานะการตรวจ', '<div class="hint">' + mLbl + ' · ผ่าน / ไม่ผ่าน / รอผลตรวจ' + (s.doneMonth ? ' · ไม่ผ่าน ' + Math.round((s.failMonth || 0) / s.doneMonth * 100) + '% ของที่ตรวจแล้ว' : '') + '</div>'
+        + donutGen([
+          { name: 'ผ่าน', v: s.passMonth || 0, c: '#4fb89a' },
+          { name: 'ไม่ผ่าน', v: s.failMonth || 0, c: '#e5484d' },
+          { name: 'ตรวจแล้ว (อื่น ๆ)', v: Math.max(0, (s.doneMonth || 0) - (s.passMonth || 0) - (s.failMonth || 0)), c: '#8fb8c9' },
+          { name: 'รอผลตรวจ', v: Math.max(0, (s.monthTotal || 0) - (s.doneMonth || 0)), c: '#f6b04a' }
+        ].filter(x => x.v > 0 || x.name === 'รอผลตรวจ'), s.monthTotal, 'คำร้อง', true, 'สัดส่วนสถานะการตรวจ'))
     + '</div>'
     + (allMode
       ? (year
@@ -2537,6 +2590,14 @@ document.addEventListener('click', e => {
   if ((el = t.closest('#treeTog'))) {
     const k = $('#bookKids'), c = k.classList.toggle('collapsed');
     el.setAttribute('aria-expanded', String(!c));
+    return;
+  }
+  if ((el = t.closest('[data-lvgo]'))) {
+    const list = (state.lvReasons || {})[el.dataset.lvgo] || [];
+    if (!list.length) return;
+    state.by = state.year || 'all'; state.bm = ''; state.bd = ''; state.bq = ''; state.bt = [];
+    state.br = list.slice(); state.bs = '__open'; state.page = 0;
+    location.hash = state.year ? 'book-' + (+state.year + 543) : 'book';
     return;
   }
   if ((el = t.closest('[data-by]'))) { state.by = el.dataset.by; state.bm = 'auto'; state.bd = ''; state.page = 0; loadView(); return; }
