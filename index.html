@@ -279,6 +279,8 @@ tbody tr:hover { background: var(--surface2); }
 }
 .pager { display: flex; align-items: center; gap: 10px 14px; justify-content: space-between; flex-wrap: wrap; padding-top: 10px; color: var(--muted); }
 .pager:empty { display: none; }
+.pager .pgsize { display: inline-flex; align-items: center; gap: 6px; margin-left: 14px; font-size: 13px; }
+.pager .pgsize select { padding: 4px 8px; border-radius: 8px; }
 .pager .pgs { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: auto; }
 .pager .pg { min-width: 36px; height: 36px; padding: 0 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; cursor: pointer; font: inherit; font-weight: 500; font-variant-numeric: tabular-nums; }
 .pager .pg:hover:not(:disabled):not([aria-current]) { background: var(--surface2); }
@@ -1095,7 +1097,9 @@ function reasonLv(x) {
 const lvVar = n => 'var(--lv' + (n || 0) + ')';
 const TCOL   = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)'];
 const PAGE_SIZE = 50, DAILY_PAGE_SIZE = 100;
-const BOOK_VISIBLE_ROWS = 15;   // สมุดคุมคำร้อง: 15 แถวต่อหน้า
+const BOOK_ROW_CHOICES = [15, 25, 50, 100];
+let BOOK_VISIBLE_ROWS = 25;      // สมุดคุมคำร้อง: จำนวนแถวต่อหน้า (ค่าเริ่มต้น 25 ผู้ใช้เลือกเองได้ จำค่าไว้ในเครื่อง)
+try { const v = +localStorage.getItem('bookRows'); if (BOOK_ROW_CHOICES.indexOf(v) >= 0) BOOK_VISIBLE_ROWS = v; } catch (e) { /* ใช้ค่าเริ่มต้น */ }
 const SEARCH_DELAY = 150;        // ms หลังหยุดพิมพ์จึงค้นหา
 const FRESH_MS = 10000;          // ข้อมูลที่โหลดไว้ไม่เกินนี้ ไม่ต้องโหลดซ้ำ
 const POLL_MS = 2000;             // ถามบ่อยเมื่อกำลังใช้งาน
@@ -1654,8 +1658,12 @@ function tableHtml(rows, emptyMsg, cls) {
 const listPageSize = () => (state.view === 'book' ? BOOK_VISIBLE_ROWS : PAGE_SIZE);
 function pagerHtml(withRange) {
   const size = listPageSize(), total = state.total, cur = state.page, last = Math.max(0, state.pages - 1);
+  const sizeSel = state.view === 'book'
+    ? '<label class="pgsize">แถวต่อหน้า <select id="pgSize" data-pgsize aria-label="จำนวนแถวต่อหน้า">'
+      + BOOK_ROW_CHOICES.map(n => '<option value="' + n + '"' + (n === size ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></label>'
+    : '';
   const range = withRange
-    ? '<span>แสดง ' + (total ? cur * size + 1 : 0) + '–' + Math.min((cur + 1) * size, total) + ' จาก ' + total.toLocaleString('th-TH') + ' รายการ</span>'
+    ? '<span>แสดง ' + (total ? cur * size + 1 : 0) + '–' + Math.min((cur + 1) * size, total) + ' จาก ' + total.toLocaleString('th-TH') + ' รายการ</span>' + sizeSel
     : '';
   if (last < 1) return range;   // มีหน้าเดียว ไม่ต้องมีปุ่มเลือกหน้า
 
@@ -2646,6 +2654,16 @@ document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (pop) { closePop(false, true); return; }
   if (!$('#modal').hidden) closeForm(); else closeDrawer();
+});
+
+document.addEventListener('change', e => {
+  if (!e.target.matches || !e.target.matches('[data-pgsize]')) return;
+  const n = +e.target.value;
+  if (BOOK_ROW_CHOICES.indexOf(n) < 0) return;
+  BOOK_VISIBLE_ROWS = n;
+  try { localStorage.setItem('bookRows', String(n)); } catch (err) { /* ไม่เป็นไร */ }
+  state.page = 0;
+  loadView();
 });
 
 $('#form').addEventListener('submit', submitForm);
