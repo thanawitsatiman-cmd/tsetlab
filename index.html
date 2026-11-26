@@ -947,6 +947,8 @@ th, td { padding: 9px 10px; }
 .dash .fbar + .sec { margin-top: 18px; }
 @media (max-width: 700px) { .dash .fbar .fnote { text-align: left; flex-basis: 100%; } }
 .dash .fbar select:disabled { opacity: .55; cursor: not-allowed; }
+/* แถบกรอง ปี/เดือน ค้างอยู่ใต้แถบบนเวลาเลื่อนหน้า (--barh = ความสูงแถบบน วัดด้วย JS) */
+.dash .fbar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--barh, 56px) + 8px); z-index: 15; box-shadow: var(--shadow); }
 .side .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .2); }
 .side .side-foot .btn { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .28); color: #fff; }
 .side .side-foot .btn:hover { background: rgba(255, 255, 255, .22); }
@@ -2786,6 +2788,15 @@ $('#btnLogout').addEventListener('click', () => {
   try { window.google && google.accounts.id.disableAutoSelect(); } catch (e) { /* ไม่เป็นไร */ }
   location.reload();
 });
+
+/* วัดความสูงแถบบน เพื่อให้แถบกรองใน Dashboard ค้างใต้แถบบนพอดี (ความสูงเปลี่ยนได้เมื่อจอแคบแล้วปุ่มขึ้นบรรทัดใหม่) */
+(function trackBarHeight() {
+  const bar = document.querySelector('.bar');
+  if (!bar) return;
+  const set = () => document.documentElement.style.setProperty('--barh', bar.offsetHeight + 'px');
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(bar); else window.addEventListener('resize', set);
+})();
 
 showGate();
 initGoogle();
