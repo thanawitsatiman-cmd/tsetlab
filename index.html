@@ -2509,8 +2509,25 @@ async function openForm(id, focus) {
   fillSel('#f_pole', ['-', '8', '9', '12', '12.20', '12.30', '14', '14.30'], r && String(r.pole || '-'));
   fillSel('#f_size', ['', ...SIZE_OPTS], r && r.size && r.size !== '-' ? r.size : '');
   formBase = formSnap();
+  formOpened = r ? { values: formData(), row: r } : null;
   $('#modal').hidden = false;
   $('#f_date').focus();
+}
+
+let formOpened = null;   // ค่าในฟอร์มและค่าจากเซิร์ฟเวอร์ตอนเปิดแก้ไข
+
+function formData() {
+  return {
+    date: $('#f_date').value,
+    name: $('#f_name').value.trim(),
+    address: $('#f_addr').value.trim(),
+    phone: $('#f_phone').value.trim(),
+    type: $('#f_type').value,
+    phase: $('#f_phase').value,
+    size: $('#f_size').value.trim() || '-',
+    inPhase: $('#f_in').value,
+    pole: $('#f_pole').value
+  };
 }
 
 async function submitForm(e) {
@@ -2526,23 +2543,20 @@ async function submitForm(e) {
     $('#mErr').textContent = miss.map(m => m[1]).join(' และ ');
     return;
   }
-  const d = {
-    date,
-    name: $('#f_name').value.trim(),
-    address: $('#f_addr').value.trim(),
-    phone: $('#f_phone').value.trim(),
-    type: $('#f_type').value,
-    phase: $('#f_phase').value,
-    size: $('#f_size').value.trim() || '-',
-    inPhase: $('#f_in').value,
-    pole: $('#f_pole').value
-  };
+  const d = formData();
   const btn = $('#mSave'), wasEditing = !!editing;
   btn.disabled = true;
   btn.textContent = 'กำลังบันทึก…';
   $('#mErr').textContent = '';
   try {
     if (wasEditing) {
+      const orig = {};
+      Object.keys(d).forEach(k => {
+        if (d[k] === formOpened.values[k]) delete d[k];   // ไม่ได้แก้ ไม่ต้องส่ง
+        else orig[k] = formOpened.row[k];
+      });
+      if (!Object.keys(d).length) { closeForm(true); return; }
+      d._orig = orig;
       d._base = formRowBase;                // ให้เซิร์ฟเวอร์ตรวจว่ายังเป็นแถวเดิม
       const res = await call('updateRequest', [editing, d, rnOf(editing)]);
       noteVer(res);
